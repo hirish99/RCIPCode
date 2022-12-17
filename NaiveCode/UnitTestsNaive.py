@@ -27,10 +27,10 @@ class TestNaiveMethod(unittest.TestCase):
         param = param[0]
         true = [self.true_deriv(t, aspect) for t in param]
         true = np.array(true)
-        print(true)
+        #print(true)
         self.assertTrue(True)
         actual = actual.reshape(-1, 2)
-        print(actual)
+        #print(actual)
         self.assertTrue(np.linalg.norm(true-actual,2)<=1e-6)
 
 

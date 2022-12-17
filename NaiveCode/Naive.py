@@ -108,16 +108,16 @@ def test_curve_speed(npan, aspect):
 def test_curve_weights(npan, aspect):
     return (lege_weights * test_curve_speed(npan, aspect)).reshape(-1)
 
-def get_r(t, eps):
-    return get_rp(t+eps)
+def get_r(t, eps, aspect):
+    return get_rp(t+eps, aspect)
 def get_rp(t,aspect):
     return np.array([aspect*np.cos(2*np.pi*t),np.sin(2*np.pi*t)])
 def get_nup(t,aspect):
     normal = np.array([np.cos(2*np.pi*t),aspect*np.sin(2*np.pi*t)])
     return normal / np.linalg.norm(normal, 2)
-def K_lim(t, eps):
-    diff = (get_r(t, eps) - get_rp(t))
-    result = np.dot(get_nup(t), diff) / (2*np.pi*np.linalg.norm(diff, 2)**2)
+def K_lim(t, eps, aspect):
+    diff = (get_r(t, eps, aspect) - get_rp(t, aspect))
+    result = np.dot(get_nup(t, aspect), diff) / (2*np.pi*np.linalg.norm(diff, 2)**2)
     return -result
 def K_eval(nu_p, r, r_p):
     nu_p_v = np.array([nu_p.real, nu_p.imag])
@@ -132,7 +132,7 @@ def K_eval(nu_p, r, r_p):
 
 
 
-def compute_double_layer_kernel(complex_positions):
+def compute_double_layer_kernel(complex_positions, aspect):
     K = np.empty((npoin,npoin))
     for i in range(npoin):
         for j in range(npoin):
@@ -140,7 +140,7 @@ def compute_double_layer_kernel(complex_positions):
             r_p = complex_positions[j]
             nu_p = curve_normal[j]
             if i == j:
-                K[i, j] = K_lim(parametrization[i], 0.01)
+                K[i, j] = K_lim(parametrization[i], 0.01, aspect)
             else:
                 K[i, j] = ((r-r_p)*np.conj(nu_p)).real/(2*np.pi*(np.abs(r-r_p))**2)
     return K
@@ -148,7 +148,7 @@ def compute_double_layer_kernel(complex_positions):
 
 
 
-def compute_double_layer_kernel_test(complex_positions):
+def compute_double_layer_kernel_test(complex_positions, aspect):
     K = np.empty((npoin,npoin))
     for i in range(npoin):
         for j in range(npoin):
@@ -156,7 +156,7 @@ def compute_double_layer_kernel_test(complex_positions):
             r_p = complex_positions[j]
             nu_p = curve_normal[j]
             if i == j:
-                K[i, j] = K_lim(parametrization[i], 0.001)
+                K[i, j] = K_lim(parametrization[i], 0.001, aspect)
             else:
                 K[i, j] = K_eval(nu_p, r, r_p)
     return K
@@ -194,7 +194,7 @@ def compute_kernel_adjoint_single_layer(complex_positions):
 
 if __name__ == '__main__':
     #Defining Number of Panels
-    npan = int(np.loadtxt('npan.np')[1])
+    npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
     #print("Number of Panels: ", npan)
     npoin = npan*16
 
@@ -215,11 +215,11 @@ if __name__ == '__main__':
 
     curve_normal = np.array(ellipse_normal(make_panels(panel_boundaries), stretch=aspect))
 
-    D_K = compute_double_layer_kernel_test(complex_positions)
+    D_K = compute_double_layer_kernel_test(complex_positions, aspect)
     W = np.diag(test_curve_weights(npan, aspect))
     D_KW = D_K @ W
     LHS = 0.5*np.eye(npoin) + D_KW
-    RHS = np.loadtxt("bc_potential.np")
+    RHS = np.loadtxt("../InitialConditions/bc_potential.np")
     density = gmres(LHS, RHS)[0]
     target_complex =1+ complex(0,1)*0
     out = compute_double_layer_off_boundary(complex_positions, target_complex) @ W @ density
