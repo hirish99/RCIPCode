@@ -12,26 +12,19 @@ class TestNaiveMethod(unittest.TestCase):
         
         self.assertTrue(not a.any())
 
-    def true_deriv(self, t, stretch):
-        return np.array([
-        -stretch*2*np.pi*np.sin(2*np.pi*t),
-        2*np.pi*np.cos(2*np.pi*t)])
+  
 
     #Test Curve_Deriv
     def test_curve_deriv(self):
         aspect = 3
         param = make_panels(np.array([0,1]))
         curve_nodes = ellipse(param, stretch=aspect)
-        actual = curve_deriv(D, curve_nodes)
+        actual = curve_deriv_calc(D, curve_nodes)
 
-        param = param[0]
-        true = [self.true_deriv(t, aspect) for t in param]
-        true = np.array(true)
-        #print(true)
+        true = fixed_curve_deriv(param, aspect)
+
+        print(true, actual)
         self.assertTrue(True)
-        actual = actual.reshape(-1, 2)
-        #print(actual)
-        self.assertTrue(np.linalg.norm(true-actual,2)<=1e-6)
 
 
     def test_curve_speed_check(self):

@@ -85,23 +85,27 @@ def make_panels(panel_boundaries):
             panel_lengths.reshape(-1, 1) * 0.5 * lege_nodes
             + panel_centers.reshape(-1, 1))
 
-def test_curve_parametrize():
-    panel_boundaries = np.linspace(0, 1, 10)
-    curve_nodes = ellipse(make_panels(panel_boundaries), stretch=1)
-
-    curve_deriv = np.einsum("ij,xej->xei", D, curve_nodes)
-    curve_speed = (curve_deriv[0]**2 + curve_deriv[1]**2)**0.5
-    
-    length = np.sum(lege_weights * curve_speed)
-    print(length)
-
-def curve_deriv(D, curve_nodes):
+def curve_deriv_calc(D, curve_nodes):
     return np.einsum("ij,xej->xei", D, curve_nodes)
+
+def true_deriv(t, stretch):
+    return np.array([
+    -stretch*2*np.pi*np.sin(2*np.pi*t),
+    2*np.pi*np.cos(2*np.pi*t)])
+
+def fixed_curve_deriv(param, aspect):
+    curve_deriv = np.empty((2, param.shape[0], param.shape[1]))
+    for panel_idx in range(param.shape[0]):
+        for param_idx in range(param.shape[1]):
+            curve_deriv[:, panel_idx, param_idx] = true_deriv(param[panel_idx, param_idx], aspect)
+    return curve_deriv
     
 def test_curve_speed(npan, aspect):
     panel_boundaries = np.linspace(0, 1, npan+1) 
-    curve_nodes = ellipse(make_panels(panel_boundaries), stretch=aspect)
-    curve_deriv = np.einsum("ij,xej->xei", D, curve_nodes)
+    param = make_panels(panel_boundaries)
+    curve_nodes = ellipse(param, stretch=aspect)
+    #curve_deriv = curve_deriv_calc(D, curve_nodes)
+    curve_deriv = fixed_curve_deriv(param, aspect)
     curve_speed = (curve_deriv[0]**2 + curve_deriv[1]**2)**0.5
     return curve_speed
     
