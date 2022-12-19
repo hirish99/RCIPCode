@@ -46,7 +46,7 @@ def ellipse(t, stretch=3):
         np.sin(2*np.pi*t),
         ])
 
-def ellipse_normal(t, stretch):
+def ellipse_normal(t, stretch, npoin):
     tan = np.array([
         -stretch*2*np.pi*np.sin(2*np.pi*t),
         2*np.pi*np.cos(2*np.pi*t)
@@ -104,8 +104,8 @@ def test_curve_speed(npan, aspect):
     panel_boundaries = np.linspace(0, 1, npan+1) 
     param = make_panels(panel_boundaries)
     curve_nodes = ellipse(param, stretch=aspect)
-    #curve_deriv = curve_deriv_calc(D, curve_nodes)
-    curve_deriv = fixed_curve_deriv(param, aspect)
+    curve_deriv = curve_deriv_calc(D, curve_nodes)
+    #curve_deriv = fixed_curve_deriv(param, aspect)
     curve_speed = (curve_deriv[0]**2 + curve_deriv[1]**2)**0.5
     return curve_speed
     
@@ -138,10 +138,7 @@ def K_eval(nu_p, r, r_p):
     return result
 
 
-
-
-
-def compute_double_layer_kernel(complex_positions, aspect):
+def compute_double_layer_kernel(complex_positions, curve_normal, aspect, npoin):
     K = np.empty((npoin,npoin))
     for i in range(npoin):
         for j in range(npoin):
@@ -154,10 +151,7 @@ def compute_double_layer_kernel(complex_positions, aspect):
                 K[i, j] = ((r-r_p)*np.conj(nu_p)).real/(2*np.pi*(np.abs(r-r_p))**2)
     return K
 
-
-
-
-def compute_double_layer_kernel_test(complex_positions, aspect):
+def compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization):
     K = np.empty((npoin,npoin))
     for i in range(npoin):
         for j in range(npoin):
@@ -171,9 +165,7 @@ def compute_double_layer_kernel_test(complex_positions, aspect):
     return K
 
 
-
-
-def compute_double_layer_off_boundary(complex_positions, target_complex):
+def compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin):
     OUT = np.empty(npoin)
     for j in range(npoin):
         r = target_complex
@@ -186,22 +178,9 @@ def compute_double_layer_off_boundary(complex_positions, target_complex):
 
 
 
-def compute_kernel_adjoint_single_layer(complex_positions):
-    K = np.empty((npoin,npoin))
-    for i in range(npoin):
-        for j in range(npoin):
-            r = complex_positions[i]
-            r_p = complex_positions[j]
-            nu = curve_normal[i]
-            if i == j:
-                K[i, j] = K_lim(parametrization[i], 0.001)
-            else:
-                K[i, j] = ((r_p-r)*np.conj(nu)).real/(2*np.pi*(np.abs(r-r_p))**2)
-    return K
 
 
-
-if __name__ == '__main__':
+def main():
     #Defining Number of Panels
     npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
     #print("Number of Panels: ", npan)
@@ -212,9 +191,8 @@ if __name__ == '__main__':
     panel_boundaries = np.linspace(0, 1, npan+1)
     curve_nodes = ellipse(make_panels(panel_boundaries), stretch=aspect)
     curve_nodes = curve_nodes.reshape(2,-1)
-    curve_normal = np.array(ellipse_normal(make_panels(panel_boundaries), stretch=aspect))
+    curve_normal = np.array(ellipse_normal(make_panels(panel_boundaries), aspect, npoin))
     parametrization = make_panels(panel_boundaries).reshape(-1)
-
     complex_positions = [complex(curve_nodes[0][i],curve_nodes[1][i]) for i in range(npoin)]
     complex_positions = np.array(complex_positions)
     #plt.scatter(complex_positions.real, complex_positions.imag)
@@ -222,17 +200,21 @@ if __name__ == '__main__':
     #plt.title('Positions of Nodes')
     #plt.show()
 
-    curve_normal = np.array(ellipse_normal(make_panels(panel_boundaries), stretch=aspect))
 
-    D_K = compute_double_layer_kernel_test(complex_positions, aspect)
+
+    D_K = compute_double_layer_kernel_test(complex_positions,  curve_normal, aspect, npoin, parametrization)
     W = np.diag(test_curve_weights(npan, aspect))
     D_KW = D_K @ W
     LHS = 0.5*np.eye(npoin) + D_KW
     RHS = np.loadtxt("../InitialConditions/bc_potential.np")
     density = gmres(LHS, RHS)[0]
-    target_complex =1+ complex(0,1)*0
-    out = compute_double_layer_off_boundary(complex_positions, target_complex) @ W @ density
+    target_complex =0.5+ complex(0,1)*0
+    out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W @ density   
     print(out)
+
+if __name__ == '__main__':
+    main()
+
 
 
 
