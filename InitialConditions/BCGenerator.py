@@ -21,7 +21,7 @@ def get_coordinates_boundary_ellipse(t):
     ])
     return retMe.reshape(2,-1)
 
-npan = 10
+npan = 20
 np.savetxt('npan.np', np.array([0, int(npan)]))
 npoin = npan*16
 panel_boundaries = np.linspace(0, 1, npan+1)
@@ -37,7 +37,7 @@ plt.scatter(target[0],target[1],c='r', label="Target")
 plt.axis('equal')
 plt.legend()
 plt.show()
-print(x[20],y[20])
+
 
 def G(x,y):
     return (-1/(2*np.pi))*np.log(np.linalg.norm(x-y,2))
@@ -66,6 +66,6 @@ ax.plot3D(xline, yline, np.zeros(len(zline)), 'grey')
 plt.title("Potential on Boundary")
 plt.show()
 
-get_potential(target)
+print(get_potential(target))
 
 np.savetxt("bc_potential.np", potential)

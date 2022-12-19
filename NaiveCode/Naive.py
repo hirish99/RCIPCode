@@ -110,7 +110,12 @@ def test_curve_speed(npan, aspect):
     return curve_speed
     
 def test_curve_weights(npan, aspect):
-    return (lege_weights * test_curve_speed(npan, aspect)).reshape(-1)
+    #print(lege_weights.shape)
+    speed = test_curve_speed(npan, aspect)
+    #print(speed.shape)
+    result = lege_weights * test_curve_speed(npan, aspect)
+    #print(result.shape)
+    return result.reshape(-1)
 
 def get_r(t, eps, aspect):
     return get_rp(t+eps, aspect)
@@ -227,6 +232,7 @@ if __name__ == '__main__':
     density = gmres(LHS, RHS)[0]
     target_complex =1+ complex(0,1)*0
     out = compute_double_layer_off_boundary(complex_positions, target_complex) @ W @ density
+    print(out)
 
 
 
