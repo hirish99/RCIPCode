@@ -201,7 +201,7 @@ def compute_kernel_adjoint_single_layer(complex_positions):
 
 
 
-if __name__ == '__main__':
+def main():
     #Defining Number of Panels
     npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
     #print("Number of Panels: ", npan)
@@ -237,3 +237,5 @@ if __name__ == '__main__':
 
 
 # %%
+if __name__ == '__main__':
+    main()
