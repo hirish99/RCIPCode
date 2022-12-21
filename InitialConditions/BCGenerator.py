@@ -21,7 +21,7 @@ def get_coordinates_boundary_ellipse(t):
     ])
     return retMe.reshape(2,-1)
 
-npan = 20
+npan = 40
 np.savetxt('npan.np', np.array([0, int(npan)]))
 npoin = npan*16
 panel_boundaries = np.linspace(0, 1, npan+1)

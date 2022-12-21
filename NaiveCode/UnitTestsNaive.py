@@ -3,7 +3,28 @@ from Naive import *
 import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
-    
+    def test_compute_double_layer_off_boundary(self):
+        aspect = 3
+        npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
+        #print("Number of Panels: ", npan)
+        npoin = npan*16
+        panel_boundaries = np.linspace(0, 1, npan+1)
+        curve_nodes = ellipse(make_panels(panel_boundaries), stretch=aspect)
+        curve_nodes = curve_nodes.reshape(2,-1)
+        curve_normal = np.array(ellipse_normal(make_panels(panel_boundaries), aspect, npoin))
+        complex_positions = [complex(curve_nodes[0][i],curve_nodes[1][i]) for i in range(npoin)]
+        complex_positions = np.array(complex_positions)
+        W = np.diag(test_curve_weights(npan, aspect))
+        list_target = [1, 3, 4]
+        density = np.ones(npoin)
+        pot0 = compute_double_layer_off_boundary(complex_positions, curve_normal, list_target[0], npoin) @ W @ density
+        pot1 = compute_double_layer_off_boundary(complex_positions, curve_normal, list_target[1], npoin) @ W @ density
+        pot2 = compute_double_layer_off_boundary(complex_positions, curve_normal, list_target[2], npoin) @ W @ density
+
+        self.assertTrue(np.abs(pot0-1)<=1e-6)
+        self.assertTrue(np.abs(pot1-0.5)<=1e-6)
+        self.assertTrue(np.abs(pot2-0)<=1e-6)
+
     def test_simple_make_panels(self):
         n = 16
         lege_nodes, lege_weights, _ = sps.legendre(n).weights.T
