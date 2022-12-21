@@ -3,6 +3,13 @@ from Naive import *
 import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
+
+    def test_get_rp(self):
+        N = 23
+        a = np.random.randint(1, N)
+        self.assertTrue(np.abs(get_rp(0,a) - a)<=1e-6)
+        self.assertTrue(np.abs(get_rp(0.25,a) - 1)<=1e-6)
+
     def test_compute_double_layer_off_boundary(self):
         aspect = 3
         npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
@@ -17,6 +24,7 @@ class TestNaiveMethod(unittest.TestCase):
         W = np.diag(test_curve_weights(npan, aspect))
         list_target = [1, 3, 4]
         density = np.ones(npoin)
+
         pot0 = compute_double_layer_off_boundary(complex_positions, curve_normal, list_target[0], npoin) @ W @ density
         pot1 = compute_double_layer_off_boundary(complex_positions, curve_normal, list_target[1], npoin) @ W @ density
         pot2 = compute_double_layer_off_boundary(complex_positions, curve_normal, list_target[2], npoin) @ W @ density
@@ -92,10 +100,6 @@ class TestNaiveMethod(unittest.TestCase):
         a = np.abs(deriv-deriv1)
         self.assertTrue(True)
         #self.assertTrue(np.linalg.norm(a,1)<=1e-6)
-
-
-
-
 
 
 if __name__ == '__main__':
