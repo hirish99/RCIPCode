@@ -4,6 +4,8 @@ import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
 
+    
+
     def test_get_rp(self):
         N = 23
         a = np.random.randint(1, N)
@@ -44,6 +46,9 @@ class TestNaiveMethod(unittest.TestCase):
     def test_test_curve_weights(self):
         test_curve_weights(2, 3)
         pass
+
+    def test_get_nup(self):
+        self.assertTrue(np.dot(get_nup(0, 12),  np.array([1,0])) == -1)
 
     def test_get_rp(self):
         N = 17

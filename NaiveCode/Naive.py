@@ -122,12 +122,12 @@ def get_r(t, eps, aspect):
 def get_rp(t,aspect):
     return np.array([aspect*np.cos(2*np.pi*t),np.sin(2*np.pi*t)])
 def get_nup(t,aspect):
-    normal = np.array([np.cos(2*np.pi*t),aspect*np.sin(2*np.pi*t)])
+    normal = np.array([-np.cos(2*np.pi*t),-aspect*np.sin(2*np.pi*t)])
     return normal / np.linalg.norm(normal, 2)
 def K_lim(t, eps, aspect):
     diff = (get_r(t, eps, aspect) - get_rp(t, aspect))
     result = np.dot(get_nup(t, aspect), diff) / (2*np.pi*np.linalg.norm(diff, 2)**2)
-    return -result
+    return result
 def K_eval(nu_p, r, r_p):
     nu_p_v = np.array([nu_p.real, nu_p.imag])
     r_v = np.array([r.real, r.imag])
