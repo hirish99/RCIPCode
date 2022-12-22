@@ -8,6 +8,25 @@ from scipy.sparse.linalg import gmres
 n = 16
 lege_nodes, lege_weights, _ = sps.legendre(n).weights.T
 
+def G(x,y):
+    return (-1/(2*np.pi))*np.log(np.linalg.norm(x-y,2))
+
+def get_potential(point, test_charges):
+    potential = 0
+    for j in range(len(test_charges)):
+        potential+=G(point,test_charges[j])
+    return potential
+
+def get_bc_conditions(test_charges, complex_positions):
+    potential = np.zeros(len(complex_positions))
+    assert(len(test_charges)==1)
+    for i in range(len(complex_positions)):
+        for j in range(len(test_charges)):
+
+            potential[i] += G(np.array([complex_positions[i].real,complex_positions[i].imag]),test_charges[j])
+    
+    return potential
+
 def lege_deriv(n, x):
     if n == 0:
         return 0*x
@@ -61,21 +80,6 @@ def ellipse_normal(t, stretch, npoin):
     complex_tangent = [complex(tan[0][i],tan[1][i]) for i in range(npoin)]
     complex_normal = [complex_tangent[i]*complex(0,1) for i in range(npoin)]
     return complex_normal
-
-def ellipse_tangent(t, stretch):
-    tan = np.array([
-        -stretch*2*np.pi*np.sin(2*np.pi*t),
-        2*np.pi*np.cos(2*np.pi*t)
-    ])
-    tan = tan.reshape(2, -1)
-    for i in range(tan.shape[1]):
-        norm = np.linalg.norm(tan[:,i],2)
-        tan[0][i] = tan[0][i]/norm
-        tan[1][i] = tan[1][i]/norm
-        #assert np.abs(np.linalg.norm(tan[:,i],2) - 1) <= 1e-6
-  
-    complex_tangent = [complex(tan[0][i],tan[1][i]) for i in range(npoin)]
-    return complex_tangent
 
 def make_panels(panel_boundaries):
     panel_lengths = np.diff(panel_boundaries)
@@ -137,20 +141,6 @@ def K_eval(nu_p, r, r_p):
     result /= 2*np.pi*np.sum(np.dot(r_v - r_p_v, r_v - r_p_v))
     return result
 
-
-def compute_double_layer_kernel(complex_positions, curve_normal, aspect, npoin):
-    K = np.empty((npoin,npoin))
-    for i in range(npoin):
-        for j in range(npoin):
-            r = complex_positions[i]
-            r_p = complex_positions[j]
-            nu_p = curve_normal[j]
-            if i == j:
-                K[i, j] = K_lim(parametrization[i], 0.01, aspect)
-            else:
-                K[i, j] = ((r-r_p)*np.conj(nu_p)).real/(2*np.pi*(np.abs(r-r_p))**2)
-    return K
-
 def compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization):
     K = np.empty((npoin,npoin))
     for i in range(npoin):
@@ -183,6 +173,7 @@ def compute_double_layer_off_boundary(complex_positions, curve_normal, target_co
 def main():
     #Defining Number of Panels
     npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
+    npan = 40
     #print("Number of Panels: ", npan)
     npoin = npan*16
 
@@ -202,11 +193,18 @@ def main():
 
 
 
-    D_K = compute_double_layer_kernel_test(complex_positions,  curve_normal, aspect, npoin, parametrization)
+    D_K = compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization)
     W = np.diag(test_curve_weights(npan, aspect))
     D_KW = D_K @ W
     LHS = 0.5*np.eye(npoin) + D_KW
-    RHS = np.loadtxt("../InitialConditions/bc_potential.np")
+    #RHS = np.loadtxt("../InitialConditions/bc_potential.np")
+    test_charge = np.array([-2,2])
+    RHS = get_bc_conditions([test_charge], complex_positions)
+
+
+
+    #assert(np.max(np.abs(RHS-get_bc_conditions([test_charge], complex_positions)))<=1e-6)
+
     density = gmres(LHS, RHS)[0]
     target_complex =0.5+ complex(0,1)*0
     out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W @ density   

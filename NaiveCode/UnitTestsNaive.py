@@ -3,6 +3,21 @@ from Naive import *
 import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
+    def estimate_order_of_convergence(abscissae, errors):
+        """Assuming that abscissae and errors are connected by a law of the form
+        error = constant * abscissa ^ (order),
+        this function finds, in a least-squares sense, the best approximation of
+        constant and order for the given data set. It returns a tuple (constant, order).
+        """
+        assert len(abscissae) == len(errors)
+        if len(abscissae) <= 1:
+            raise RuntimeError("Need more than one value to guess order of convergence.")
+
+        coefficients = np.polyfit(np.log10(abscissae), np.log10(errors), 1)
+        return 10**coefficients[-1], coefficients[-2]
+    
+    def test_order_of_convergence(self):
+        pass
 
     
 
