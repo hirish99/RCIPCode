@@ -19,10 +19,8 @@ def get_potential(point, test_charges):
 
 def get_bc_conditions(test_charges, complex_positions):
     potential = np.zeros(len(complex_positions))
-    assert(len(test_charges)==1)
     for i in range(len(complex_positions)):
         for j in range(len(test_charges)):
-
             potential[i] += G(np.array([complex_positions[i].real,complex_positions[i].imag]),test_charges[j])
     
     return potential
@@ -166,13 +164,50 @@ def compute_double_layer_off_boundary(complex_positions, curve_normal, target_co
     return OUT
 
 
+def get_error(npan, test_charge, target_complex):
+    #Defining Number of Panels
+    #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
+    #npan = 40
+    #print("Number of Panels: ", npan)
+    npoin = npan*16
 
+    #Defining Relevant Parametrized Quantities
+    aspect = 3
+    panel_boundaries = np.linspace(0, 1, npan+1)
+    curve_nodes = ellipse(make_panels(panel_boundaries), stretch=aspect)
+    curve_nodes = curve_nodes.reshape(2,-1)
+    curve_normal = np.array(ellipse_normal(make_panels(panel_boundaries), aspect, npoin))
+    parametrization = make_panels(panel_boundaries).reshape(-1)
+    complex_positions = [complex(curve_nodes[0][i],curve_nodes[1][i]) for i in range(npoin)]
+    complex_positions = np.array(complex_positions)
+    #plt.scatter(complex_positions.real, complex_positions.imag)
+    #plt.axis('equal')
+    #plt.title('Positions of Nodes')
+    #plt.show()
+
+    D_K = compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization)
+    W = np.diag(test_curve_weights(npan, aspect))
+    D_KW = D_K @ W
+    LHS = 0.5*np.eye(npoin) + D_KW
+    #RHS = np.loadtxt("../InitialConditions/bc_potential.np")
+    #test_charge = np.array([-2,2])
+    RHS = get_bc_conditions([test_charge], complex_positions)
+    #assert(np.max(np.abs(RHS-get_bc_conditions([test_charge], complex_positions)))<=1e-6)
+
+    #density = gmres(LHS, RHS)[0]
+    density = np.linalg.solve(LHS, RHS)
+    #target_complex =0.5+ complex(0,1)*0
+    out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W @ density   
+    print("OUT:", out)
+    true = get_potential(np.array([0.5,0]), [test_charge])
+
+    return np.abs(out-true)
 
 
 
 def main():
     #Defining Number of Panels
-    npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
+    #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
     npan = 40
     #print("Number of Panels: ", npan)
     npoin = npan*16
@@ -191,8 +226,6 @@ def main():
     #plt.title('Positions of Nodes')
     #plt.show()
 
-
-
     D_K = compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization)
     W = np.diag(test_curve_weights(npan, aspect))
     D_KW = D_K @ W
@@ -200,15 +233,16 @@ def main():
     #RHS = np.loadtxt("../InitialConditions/bc_potential.np")
     test_charge = np.array([-2,2])
     RHS = get_bc_conditions([test_charge], complex_positions)
-
-
-
     #assert(np.max(np.abs(RHS-get_bc_conditions([test_charge], complex_positions)))<=1e-6)
 
     density = gmres(LHS, RHS)[0]
     target_complex =0.5+ complex(0,1)*0
     out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W @ density   
-    print(out)
+    print("Result:", out)
+    true = get_potential(np.array([0.5,0]), [test_charge])
+    print("True:", true)
+    print("Error:", np.abs(out-true))
+
 
 if __name__ == '__main__':
     main()

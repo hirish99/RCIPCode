@@ -3,7 +3,7 @@ from Naive import *
 import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
-    def estimate_order_of_convergence(abscissae, errors):
+    def estimate_order_of_convergence(self, abscissae, errors):
         """Assuming that abscissae and errors are connected by a law of the form
         error = constant * abscissa ^ (order),
         this function finds, in a least-squares sense, the best approximation of
@@ -17,7 +17,26 @@ class TestNaiveMethod(unittest.TestCase):
         return 10**coefficients[-1], coefficients[-2]
     
     def test_order_of_convergence(self):
-        pass
+        N = 20
+        test_charge = np.array([-2,2])
+        target_complex = 0.5+ complex(0,1)*0
+        err = []
+        x = []
+        for npan in range(1,N,2):
+            err.append(get_error(npan, test_charge, target_complex))
+            x.append(13.365/npan)
+        err = np.array(err)
+        x = np.array(x)
+
+        order = self.estimate_order_of_convergence(x, err)
+
+        plt.scatter(np.log(x),np.log(err))
+        print(err)
+        plt.show()
+        print(order)
+
+        #pass
+
 
     
 
