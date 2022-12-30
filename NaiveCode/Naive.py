@@ -4,9 +4,43 @@ import numpy.linalg as la
 import matplotlib.pyplot as plt
 import cmath as cm
 from scipy.sparse.linalg import gmres
+import sympy as sp
 
 n = 16
 lege_nodes, lege_weights, _ = sps.legendre(n).weights.T
+
+class sympy_kernel:
+    def __init__(self, aspect):
+        t_p = sp.Symbol('t_p')
+        t = sp.Symbol('t')
+        a = sp.Symbol('a')
+
+        self.aspect = aspect
+        self.t_p = t_p
+        self.t = t
+        self.a = a
+
+        rp = sp.Matrix([a*sp.cos(2*sp.pi*t_p),sp.sin(2*sp.pi*t_p)])
+        r = sp.Matrix([a*sp.cos(2*sp.pi*t),sp.sin(2*sp.pi*t)])
+        vp = sp.Matrix([-sp.cos(2*sp.pi*t_p),-a*sp.sin(2*sp.pi*t_p)])/sp.sqrt((sp.cos(2*sp.pi*t_p))**2+(a*sp.sin(2*sp.pi*t_p))**2)
+
+        numerator = (vp.T* (r-rp))[0]
+        denominator = 2*sp.pi*((r-rp).T * (r-rp))[0]
+        expr = numerator/denominator
+
+        expr = expr.subs([(a, aspect)])
+        f = sp.utilities.lambdify([t,t_p],expr,"numpy")
+
+        self.kernel_lambda = f
+
+    def kernel_evaluate_equal(self, t_in):
+        numerator = self.aspect
+        denominator = (4*np.pi)*(self.aspect**2 * (np.sin(2*np.pi*t_in))**2 + (np.cos(2*np.pi*t_in))**2)**(1.5)
+        return numerator/denominator
+
+    def kernel_evaluate(self, t_in, t_p_in):
+            return self.kernel_lambda(t_in, t_p_in)
+
 
 def G(x,y):
     return (-1/(2*np.pi))*np.log(np.linalg.norm(x-y,2))
@@ -130,6 +164,7 @@ def K_lim(t, eps, aspect):
     diff = (get_r(t, eps, aspect) - get_rp(t, aspect))
     result = np.dot(get_nup(t, aspect), diff) / (2*np.pi*np.linalg.norm(diff, 2)**2)
     return result
+    
 def K_eval(nu_p, r, r_p):
     nu_p_v = np.array([nu_p.real, nu_p.imag])
     r_v = np.array([r.real, r.imag])
@@ -208,7 +243,7 @@ def get_error(npan, test_charge, target_complex):
 def main():
     #Defining Number of Panels
     #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
-    npan = 40
+    npan = 50
     #print("Number of Panels: ", npan)
     npoin = npan*16
 
@@ -226,7 +261,21 @@ def main():
     #plt.title('Positions of Nodes')
     #plt.show()
 
-    D_K = compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization)
+    #D_K_old = compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization)
+    sympy_kern = sympy_kernel(3)
+    D_K = np.zeros((npoin, npoin))
+    for i in range(npoin):
+        D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
+    for i in range(npoin):
+        D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
+
+
+    """ 
+    index = np.argmax(D_K - D_K_old)
+    print(index // npoin, index % npoin)
+    print(np.max(D_K - D_K_old))
+    """
+
     W = np.diag(test_curve_weights(npan, aspect))
     D_KW = D_K @ W
     LHS = 0.5*np.eye(npoin) + D_KW
