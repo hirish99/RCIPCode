@@ -5,7 +5,6 @@ from scipy.linalg import block_diag
 from scipy.sparse.linalg import gmres
 import scipy.special as sps
 
-
 from Naive import get_bc_conditions
 
 n = 16
@@ -55,6 +54,25 @@ def zppfunc(s, theta):
     part4 = complex(0,1)*theta*np.sin(np.pi*s)*complex(0,1)*theta*complex_exp(theta*(s-0.5))
     
     return part1+part2+part3+part4
+
+def zfunc_ellipse(s, a):
+    return np.array([
+        a*np.cos(2*np.pi*s)+
+        complex(0,1)*np.sin(2*np.pi*s)
+        ])
+
+def zpfunc_ellipse(s, a):
+    return np.array([
+        -2*np.pi*a*np.sin(2*np.pi*s)+
+        2*np.pi*complex(0,1)*np.cos(2*np.pi*s)
+        ])
+
+def zppfunc_ellipse(s, a):
+    return np.array([
+        -((2*np.pi)**2)*a*np.cos(2*np.pi*s)+
+        -((2*np.pi)**2)*complex(0,1)*np.sin(2*np.pi*s)
+        ])
+
 def zinit(theta,sinter,sinterdiff,T,W,npan):
     npoin = 16*npan #np is the number of points used for discretization in total
     s = np.zeros(npoin)
@@ -80,6 +98,31 @@ def zinit(theta,sinter,sinterdiff,T,W,npan):
     
     return z, zp, zpp,nz,w,wzp, npoin
 
+def zinit_ellipse(a,sinter,sinterdiff,T,W,npan):
+    npoin = 16*npan #np is the number of points used for discretization in total
+    s = np.zeros(npoin)
+    w = np.zeros(npoin)
+
+    for k in range(npan):
+        start_in = k*16
+        end_in = (k+1)*16
+        #print(start_in, end_in)
+        sdif = sinterdiff[k]/2
+        #essentially s represents the parametrization from 0 to 1
+        #We divide the values in T by 2 get a range -0.5 to 0.5
+        #Then center it at the midpoint of each interval. Simple.
+        s[start_in:end_in] = (sinter[k]+sinter[k+1])/2 + sdif*T
+        #The weights are correspondingly scaled/2 since we are are transforming
+        #from -1,1 to x,x+sinter
+        w[start_in:end_in] = W*sdif
+    z = zfunc_ellipse(s, a)
+    zp = zpfunc_ellipse(s, a)
+    zpp = zppfunc_ellipse(s, a)
+    nz = -complex(0,1)*zp/np.abs(zp)
+    wzp = w*zp
+    
+    return z, zp, zpp,nz,w,wzp, npoin
+
 def zloc_init(theta, T, W, nsub, level, npan):
     denom = 2**(nsub-level) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
@@ -89,6 +132,20 @@ def zloc_init(theta, T, W, nsub, level, npan):
     z = zfunc(s_new, theta)
     zp = zpfunc(s_new, theta)
     zpp = zppfunc(s_new, theta)
+    nz = -complex(0,1)*zp/np.abs(zp)
+    wzp = w * zp
+    
+    return z,zp,zpp,nz,w,wzp
+
+def zloc_init_ellipse(a, T, W, nsub, level, npan):
+    denom = 2**(nsub-level) * npan
+    s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
+    s_new = np.append(list(reversed(1-s_new)),s_new)
+    w = np.append(np.append(W/4, W/4), W/2)/denom
+    w = np.append(list(reversed(w)), w)
+    z = zfunc_ellipse(s_new, a)
+    zp = zpfunc_ellipse(s_new, a)
+    zpp = zppfunc_ellipse(s_new, a)
     nz = -complex(0,1)*zp/np.abs(zp)
     wzp = w * zp
     
