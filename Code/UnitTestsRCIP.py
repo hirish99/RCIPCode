@@ -1,6 +1,7 @@
 from RCIP import *
 
 import unittest
+
 class TestNaiveMethod(unittest.TestCase):
 
     def initialize_s(self, npan):
@@ -26,24 +27,32 @@ class TestNaiveMethod(unittest.TestCase):
 
     def test_zfunc_ellipse(self):
         s = self.initialize_s(10)
-        print(s)
-        out = (zfunc_ellipse(s, 3))
-        plt.scatter(out.real, out.imag)
-        plt.show()
+        aspect = np.random.randint(1, 4)
+        out = (zfunc_ellipse(s, aspect))
+
+        self.assertTrue(out.real[0,0]-aspect <=1e-3)
+        """ print(out.real)
+        plt.scatter(out.real[0,:10], out.imag[0,:10])
+        plt.title("zfunc")
+        plt.show() """
+        
 
     def test_zpfunc_ellipse(self):
         s = self.initialize_s(10)
-        print(s)
-        out = (zpfunc_ellipse(s, 3))
-        plt.scatter(out.real, out.imag)
-        plt.show()
+        aspect = np.random.randint(1, 4)
+        out = (zpfunc_ellipse(s, aspect))
+        """ plt.scatter(out.real[0,:10], out.imag[0,:10])
+        plt.title("zpfunc")
+        plt.show() """
+        self.assertTrue(out.imag[0,0]-2*np.pi<=1e-8)
+        self.assertTrue(out.real[0,0]-0<=1e-8)
     
     def test_zppfunc_ellipse(self):
         s = self.initialize_s(10)
-        print(s)
-        out = (zppfunc_ellipse(s, 3))
-        plt.scatter(out.real, out.imag)
-        plt.show()
+        aspect = np.random.randint(1, 4)
+        out = (zppfunc_ellipse(s, aspect))
+        self.assertTrue(out.imag[0,0]-0<=1e-8)
+        self.assertTrue(out.real[0,0]-aspect*(2*np.pi)**2<=1e-8)
 
     def test_zinit_ellipse(self):
         #Number of panels = 10
@@ -52,6 +61,7 @@ class TestNaiveMethod(unittest.TestCase):
         sinterdiff = np.ones(npan)/npan
 
         z, zp, zpp, nz, w, wzp, npoin = zinit_ellipse(3, sinter, sinterdiff, T, W, npan)
+
 
     def test_zloc_init_ellipse(self):
         zloc_init_ellipse(3,T,W,3,2,10)
