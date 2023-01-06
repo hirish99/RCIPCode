@@ -218,8 +218,9 @@ def MAinit(z,zp,zpp,nz,w,wzp,npoin):
 def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
     for level in range(1, nsub+1):
         s, w = zloc_init_ellipse(T, W, nsub, level, npan)
-        K = MAinit_ellipse(s, w, aspect)
-        MAT = np.eye(96) + 2*K
+        K = 2*MAinit_ellipse(s, w, aspect)
+        #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+        MAT = np.eye(96) + K
         if level == 1:
             R = np.linalg.inv(MAT[16:80,16:80])
         MAT[16:80,16:80] = np.linalg.inv(R)
@@ -227,6 +228,7 @@ def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
     return R
 
 def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
+    R = None
     for level in range(1, nsub+1):
         z,zp,zpp,nz,w,wzp = zloc_init(theta,T,W,nsub,level,npan)
         K = MAinit(z,zp,zpp,nz,w,wzp,96)
@@ -240,6 +242,73 @@ def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
 def f(s, target):
     return (-1/(2*np.pi)) * np.log(np.linalg.norm(s - target,2,axis=1))
 
+def main_ellipse():
+    IP, IPW = IPinit(T,  W)
+
+    aspect = 3
+
+    #Number of panels = 10
+    npan = 10
+    nsub = 3
+
+    s, w = zinit_ellipse(T,  W, npan)
+    z = zfunc_ellipse(s, aspect)
+    z = z[0]
+    npoin = s.shape[0]
+
+    #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+    Kcirc = 2*MAinit_ellipse(s, w, aspect)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+    R_sp = Rcomp_ellipse(aspect,T,W,Pbc,PWbc,nsub,npan)
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+
+    I_coa = np.eye(npoin)
+    LHS = I_coa + (Kcirc@R)
+    #pot_boundary = np.loadtxt('bc_potential.np')
+    
+    test_charge = np.array([-2,2])
+    RHS = 2*get_bc_conditions([test_charge], z)
+
+    target = np.array([0,0.2])
+
+    density = gmres(LHS, RHS)[0]
+    #print(LHS, RHS)
+    density_hat = R @ density
+
+    z_list = np.empty((npoin,2))
+    z_list[:,0] = z.real
+    z_list[:,1] = z.imag
+
+    f_list = f(z_list,target)
+
+    awzp = w * np.abs(zpfunc_ellipse(s, aspect))
+
+    pot_at_target = np.sum(f_list*density_hat*awzp)
+
+    print(pot_at_target)
+
+
+""" 
 def main():
     IP, IPW = IPinit(T,  W)
 
@@ -283,6 +352,7 @@ def main():
     LHS = I_coa +lamda*(Kcirc@R)
     #pot_boundary = np.loadtxt('bc_potential.np')
     test_charge = np.array([-2,2])
+    print(z)
     RHS = 2*get_bc_conditions([test_charge], z)
 
     target = np.array([-1,0.3])
@@ -300,10 +370,10 @@ def main():
 
     pot_at_target = np.sum(f_list*density_hat*awzp)
 
-    print(pot_at_target)
+    print(pot_at_target) """
 
 
 
 
 if __name__ == '__main__':
-    main()
+    main_ellipse()

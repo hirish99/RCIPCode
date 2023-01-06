@@ -132,7 +132,7 @@ class TestNaiveMethod(unittest.TestCase):
         npan = 10
         R = Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan)
         print(R[:2,:2])
-        #I cant think of a good test here??
+        #I cant think of a good test here?? Perhaps K_circ R
 
 
         
