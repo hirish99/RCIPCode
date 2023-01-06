@@ -221,8 +221,8 @@ def get_error(npan, test_charge, target_complex):
     #plt.show()
 
     D_K = compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization)
-    W = np.diag(test_curve_weights(npan, aspect))
-    D_KW = D_K @ W
+    W_shape = np.diag(test_curve_weights(npan, aspect))
+    D_KW = D_K @ W_shape
     LHS = 0.5*np.eye(npoin) + D_KW
     #RHS = np.loadtxt("../InitialConditions/bc_potential.np")
     #test_charge = np.array([-2,2])
@@ -232,7 +232,7 @@ def get_error(npan, test_charge, target_complex):
     #density = gmres(LHS, RHS)[0]
     density = np.linalg.solve(LHS, RHS)
     #target_complex =0.5+ complex(0,1)*0
-    out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W @ density   
+    out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W_shape @ density   
     print("OUT:", out)
     true = get_potential(np.array([0.5,0]), [test_charge])
 
@@ -276,8 +276,8 @@ def main():
     print(np.max(D_K - D_K_old))
     """
 
-    W = np.diag(test_curve_weights(npan, aspect))
-    D_KW = D_K @ W
+    W_shape = np.diag(test_curve_weights(npan, aspect))
+    D_KW = D_K @ W_shape
     LHS = 0.5*np.eye(npoin) + D_KW
     #RHS = np.loadtxt("../InitialConditions/bc_potential.np")
     test_charge = np.array([-2,2])
@@ -286,7 +286,7 @@ def main():
 
     density = gmres(LHS, RHS)[0]
     target_complex =0.5+ complex(0,1)*0
-    out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W @ density   
+    out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W_shape @ density   
     print("Result:", out)
     true = get_potential(np.array([0.5,0]), [test_charge])
     print("True:", true)

@@ -6,7 +6,8 @@ from scipy.sparse.linalg import gmres
 import scipy.special as sps
 
 from Naive import get_bc_conditions
-from Naive import sympy_kernel
+from Naive import sympy_kernel, test_curve_weights
+from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal
 
 n = 16
 T, W, _ = sps.legendre(n).weights.T
@@ -91,6 +92,7 @@ def zinit(theta,sinter,sinterdiff,T,W,npan):
         #The weights are correspondingly scaled/2 since we are are transforming
         #from -1,1 to x,x+sinter
         w[start_in:end_in] = W*sdif
+
     z = zfunc(s, theta)
     zp = zpfunc(s, theta)
     zpp = zppfunc(s, theta)
@@ -99,8 +101,13 @@ def zinit(theta,sinter,sinterdiff,T,W,npan):
     
     return z, zp, zpp,nz,w,wzp, npoin
 
-def zinit_ellipse(a,sinter,sinterdiff,T,W,npan):
+def zinit_ellipse(T,W,npan):
     npoin = 16*npan #np is the number of points used for discretization in total
+
+    #npan = 10
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+
     s = np.zeros(npoin)
     w = np.zeros(npoin)
 
@@ -155,18 +162,35 @@ def zloc_init_ellipse(T, W, nsub, level, npan):
 
     return s_new, w
 
-def MAinit_ellipse(parametrization, weights, aspect):
+def MAinit_ellipse_check(parametrization, weights, aspect):
 
     sympy_kern = sympy_kernel(aspect)
-    npoin = s.shape[0]
+    npoin = parametrization.shape[0]
     D_K = np.zeros((npoin, npoin))
     for i in range(npoin):
         D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
     for i in range(npoin):
         D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
 
-    W = np.diag(weights)
-    D_KW = D_K @ W
+    W_shape = np.diag(weights) * np.abs(zpfunc_ellipse(parametrization, aspect))
+
+    D_KW = D_K @ W_shape
+
+    return D_KW, D_K, W_shape
+
+def MAinit_ellipse(parametrization, weights, aspect):
+
+    sympy_kern = sympy_kernel(aspect)
+    npoin = parametrization.shape[0]
+    D_K = np.zeros((npoin, npoin))
+    for i in range(npoin):
+        D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
+    for i in range(npoin):
+        D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
+
+    W_shape = np.diag(weights) * np.abs(zpfunc_ellipse(parametrization, aspect))
+
+    D_KW = D_K @ W_shape
 
     return D_KW
 
