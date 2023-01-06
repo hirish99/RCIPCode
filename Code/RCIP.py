@@ -214,6 +214,18 @@ def MAinit(z,zp,zpp,nz,w,wzp,npoin):
 
     return retMe
     
+
+def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
+    for level in range(1, nsub+1):
+        s, w = zloc_init_ellipse(T, W, nsub, level, npan)
+        K = MAinit_ellipse(s, w, aspect)
+        MAT = np.eye(96) + 2*K
+        if level == 1:
+            R = np.linalg.inv(MAT[16:80,16:80])
+        MAT[16:80,16:80] = np.linalg.inv(R)
+        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
+    return R
+
 def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
     for level in range(1, nsub+1):
         z,zp,zpp,nz,w,wzp = zloc_init(theta,T,W,nsub,level,npan)
@@ -289,6 +301,9 @@ def main():
     pot_at_target = np.sum(f_list*density_hat*awzp)
 
     print(pot_at_target)
+
+
+
 
 if __name__ == '__main__':
     main()
