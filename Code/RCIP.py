@@ -6,6 +6,7 @@ from scipy.sparse.linalg import gmres
 import scipy.special as sps
 
 from Naive import get_bc_conditions
+from Naive import sympy_kernel
 
 n = 16
 T, W, _ = sps.legendre(n).weights.T
@@ -115,13 +116,13 @@ def zinit_ellipse(a,sinter,sinterdiff,T,W,npan):
         #The weights are correspondingly scaled/2 since we are are transforming
         #from -1,1 to x,x+sinter
         w[start_in:end_in] = W*sdif
-    z = zfunc_ellipse(s, a)
-    zp = zpfunc_ellipse(s, a)
-    zpp = zppfunc_ellipse(s, a)
-    nz = -complex(0,1)*zp/np.abs(zp)
-    wzp = w*zp
+        """     z = zfunc_ellipse(s, a)
+        zp = zpfunc_ellipse(s, a)
+        zpp = zppfunc_ellipse(s, a)
+        nz = -complex(0,1)*zp/np.abs(zp)
+        wzp = w*zp """
     
-    return z, zp, zpp,nz,w,wzp, npoin
+    return s, w
 
 def zloc_init(theta, T, W, nsub, level, npan):
     denom = 2**(nsub-level) * npan
@@ -137,20 +138,39 @@ def zloc_init(theta, T, W, nsub, level, npan):
     
     return z,zp,zpp,nz,w,wzp
 
-def zloc_init_ellipse(a, T, W, nsub, level, npan):
+def zloc_init_ellipse(T, W, nsub, level, npan):
     denom = 2**(nsub-level) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
     s_new = np.append(list(reversed(1-s_new)),s_new)
     w = np.append(np.append(W/4, W/4), W/2)/denom
     w = np.append(list(reversed(w)), w)
+    '''
     z = zfunc_ellipse(s_new, a)
     zp = zpfunc_ellipse(s_new, a)
     zpp = zppfunc_ellipse(s_new, a)
     nz = -complex(0,1)*zp/np.abs(zp)
     wzp = w * zp
     
-    return z,zp,zpp,nz,w,wzp
-    
+    return z,zp,zpp,nz,w,wzp '''
+
+    return s_new, w
+
+def MAinit_ellipse(parametrization, weights, aspect):
+
+    sympy_kern = sympy_kernel(aspect)
+    npoin = s.shape[0]
+    D_K = np.zeros((npoin, npoin))
+    for i in range(npoin):
+        D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
+    for i in range(npoin):
+        D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
+
+    W = np.diag(weights)
+    D_KW = D_K @ W
+
+    return D_KW
+
+
 def MAinit(z,zp,zpp,nz,w,wzp,npoin):
     import warnings
     warnings.filterwarnings("ignore", message="divide by zero encountered in divide")

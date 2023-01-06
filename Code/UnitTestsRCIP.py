@@ -55,16 +55,23 @@ class TestNaiveMethod(unittest.TestCase):
         self.assertTrue(out.real[0,0]-aspect*(2*np.pi)**2<=1e-8)
 
     def test_zinit_ellipse(self):
-        #Number of panels = 10
-        npan = 10
-        sinter = np.linspace(0, 1, npan+1)
-        sinterdiff = np.ones(npan)/npan
+        s_2, w_2 = zloc_init_ellipse(T, W, 4, 2, 3)
+        s_1, w_1 = zloc_init_ellipse(T, W, 4, 1, 3)
 
-        z, zp, zpp, nz, w, wzp, npoin = zinit_ellipse(3, sinter, sinterdiff, T, W, npan)
+        print(s_2.min(), s_2.max())
+        print(s_1.min(), s_1.max())
+        print(s_1.shape)
+        print(s_2.shape)
+        plt.scatter(np.arange(0,96), s_2, label="s_2")
+        plt.scatter(np.arange(0,96), s_1, label="s_1")
+        plt.legend()
+        plt.show()
 
 
+
+   
     def test_zloc_init_ellipse(self):
-        zloc_init_ellipse(3,T,W,3,2,10)
+        pass
 
 
 
