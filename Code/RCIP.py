@@ -242,6 +242,44 @@ def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
 def f(s, target):
     return (-1/(2*np.pi)) * np.log(np.linalg.norm(s - target,2,axis=1))
 
+
+def compute_K_star(aspect, npan):
+    IP, IPW = IPinit(T,  W)
+
+    s, w = zinit_ellipse(T,  W, npan)
+    z = zfunc_ellipse(s, aspect)
+    z = z[0]
+    npoin = s.shape[0]
+
+    #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+    K = 2*MAinit_ellipse(s, w, aspect)
+    Kcirc = 2*MAinit_ellipse(s, w, aspect)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Kstar = K - Kcirc
+
+    return Kstar
+
+def compute_R_true(aspect,npan):
+
+    Kstar = compute_K_star(aspect, npan)
+
+    npoin = npan * 16
+    R_true = np.linalg.inv(np.eye(npoin) +Kstar)
+
+    return R_true
+
+
+
+
 def main_ellipse():
     IP, IPW = IPinit(T,  W)
 
@@ -272,6 +310,7 @@ def main_ellipse():
     PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
     R_sp = Rcomp_ellipse(aspect,T,W,Pbc,PWbc,nsub,npan)
+
     R = np.eye(npoin)
     #Not the most efficient but quadratic in the order of quadrature
     l=0
@@ -281,6 +320,9 @@ def main_ellipse():
             R[i,j] = R_sp[l,m]
             m+=1
         l+=1
+
+    R = compute_R_true(aspect, npan)
+
 
     I_coa = np.eye(npoin)
     LHS = I_coa + (Kcirc@R)

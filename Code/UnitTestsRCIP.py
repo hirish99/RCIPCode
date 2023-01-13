@@ -123,15 +123,22 @@ class TestNaiveMethod(unittest.TestCase):
         self.assertTrue(np.max(np.abs(np.diag(W_new)-np.diag(W_shape)))<=1e-8)
 
 
+
+
     def test_Rcomp_ellipse(self):
         IP, IPW = IPinit(T,  W)
         Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
         PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
         aspect = 3
-        nsub = 0
+        nsub = 4
         npan = 10
         R = Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan)
-        print(R[:2,:2])
+
+
+        R_true = compute_R_true(aspect, npan)
+
+        print(R_true[:5,:5],R[:5,:5])
+
         #I cant think of a good test here?? Perhaps K_circ R
 
 
