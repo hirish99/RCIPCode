@@ -266,19 +266,28 @@ def give_fine_mesh_parametrization_ellipse(nsub, npan):
     arr_endpoints.append(0)
 
     parametrization = np.array([])
+    param_weights = np.array([])
     for i in range(len(arr_endpoints)-1, 0, -1):
         #print(arr_endpoints[i],arr_endpoints[i-1])
         parametrization = np.append(parametrization ,get_param_T(arr_endpoints[i],arr_endpoints[i-1]))
-    
+        param_weights = np.append(param_weights, W*(arr_endpoints[i-1]-arr_endpoints[i]))
 
     otherpanels = np.linspace(2*(1/npan),1-2*(1/npan), npan-3)
     otherpanelsT = np.array([])
+    otherweights = np.array([])
     for i in range(len(otherpanels)-1):
         otherpanelsT = np.append(otherpanelsT,get_param_T(otherpanels[i],otherpanels[i+1]))
+        otherweights = np.append(otherweights, W*(otherpanels[i+1]-otherpanels[i]))
 
     parametrization = np.append(np.append(parametrization, otherpanelsT), list(reversed(1-parametrization)))
-    
-    return parametrization
+    weights = np.append(np.append(param_weights, otherweights), list(reversed(param_weights)))
+
+    return parametrization, weights
+
+def get_K_star_fine(nsub, npan):
+    param = give_fine_mesh_parametrization_ellipse(nsub, npan)
+    K = MAinit_ellipse(param, )
+
 
 
     
@@ -333,7 +342,6 @@ def main_ellipse():
             m+=1
         l+=1
 
-    R = compute_R_true(aspect, npan)
 
 
     I_coa = np.eye(npoin)
