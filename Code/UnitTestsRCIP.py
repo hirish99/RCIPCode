@@ -57,12 +57,11 @@ class TestNaiveMethod(unittest.TestCase):
     def test_zloc_init_ellipse(self):
         self.assertTrue(True)
 
-        """         
-        nsub = 5
+           
+        nsub = 2
         npan = 10
-        s_2, w_2, denom = zloc_init_ellipse(T, W, nsub, 4, npan)
-        s_1, w_1, denom1= zloc_init_ellipse(T, W, nsub, 1, npan)
-        print("DENOM:", denom, denom1)
+        s_2, w_2 = zloc_init_ellipse(T, W, nsub, 2, npan)
+        s_1, w_1= zloc_init_ellipse(T, W, nsub, 0, npan)
 
         print(s_2.min(), s_2.max())
         print(s_1.min(), s_1.max())
@@ -72,7 +71,7 @@ class TestNaiveMethod(unittest.TestCase):
         plt.scatter(np.arange(0,96), s_1, label="s_1")
         plt.legend()
         plt.show() 
-        """
+        
 
     def test_zinit_ellipse(self):
         """         npan = 10
@@ -123,23 +122,6 @@ class TestNaiveMethod(unittest.TestCase):
         self.assertTrue(np.max(np.abs(np.diag(W_new)-np.diag(W_shape)))<=1e-8)
 
 
-
-
-    def test_Rcomp_ellipse(self):
-        IP, IPW = IPinit(T,  W)
-        Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
-        PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
-        aspect = 3
-        nsub = 4
-        npan = 10
-        R = Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan)
-
-
-        R_true = compute_R_true(aspect, npan)
-
-        print(R_true[:5,:5],R[:5,:5])
-
-        #I cant think of a good test here?? Perhaps K_circ R
 
 
         

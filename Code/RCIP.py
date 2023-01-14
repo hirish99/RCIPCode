@@ -39,6 +39,8 @@ def IPinit(T, W):
     W_fin = np.diag(W2)
     
     IPW = W_fin @ IP @ np.linalg.inv(W_coa)
+
+    print(IPW.shape)
     
     return IP, IPW
 
@@ -146,6 +148,9 @@ def zloc_init(theta, T, W, nsub, level, npan):
     return z,zp,zpp,nz,w,wzp
 
 def zloc_init_ellipse(T, W, nsub, level, npan):
+    #level goes from 0 to nsub-1
+    #different from the paper where level goes from 1,nsub
+    #note that nsub represents a type b mesh on \tau^*!!!
     denom = 2**(nsub-level) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
     s_new = np.append(list(reversed(1-s_new)),s_new)
@@ -192,7 +197,7 @@ def MAinit_ellipse(parametrization, weights, aspect):
 
     D_KW = D_K @ W_shape
 
-    return D_KW
+    return 2*D_KW
 
 
 def MAinit(z,zp,zpp,nz,w,wzp,npoin):
@@ -218,7 +223,7 @@ def MAinit(z,zp,zpp,nz,w,wzp,npoin):
 def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
     for level in range(1, nsub+1):
         s, w = zloc_init_ellipse(T, W, nsub, level, npan)
-        K = 2*MAinit_ellipse(s, w, aspect)
+        K = MAinit_ellipse(s, w, aspect)
         #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
         MAT = np.eye(96) + K
         if level == 1:
@@ -243,39 +248,46 @@ def f(s, target):
     return (-1/(2*np.pi)) * np.log(np.linalg.norm(s - target,2,axis=1))
 
 
-def compute_K_star(aspect, npan):
-    IP, IPW = IPinit(T,  W)
 
-    s, w = zinit_ellipse(T,  W, npan)
-    z = zfunc_ellipse(s, aspect)
-    z = z[0]
-    npoin = s.shape[0]
+def get_param_T(end1, end2):
+    return (T+1)/2 * (end2-end1) + end1
 
-    #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
-    K = 2*MAinit_ellipse(s, w, aspect)
-    Kcirc = 2*MAinit_ellipse(s, w, aspect)
 
-    starind = [i for i in range(npoin-32,npoin)]
-    starind += [i for i in range(32)]
-    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+def give_fine_mesh_parametrization_ellipse(nsub, npan):
+    denom = 2 * npan
 
-    for i in starind:
-        for j in starind:
-            bmask[i,j]=1
-    Kcirc[bmask] = 0
+    #the first 2 panels closest to the singularity correspond
+    #to tau^*
+    start = 2/npan
+    arr_endpoints = []
+    for i in range(nsub+1):
+        arr_endpoints.append(start)
+        start /= 2
+    arr_endpoints.append(0)
 
-    Kstar = K - Kcirc
+    parametrization = np.array([])
+    for i in range(len(arr_endpoints)-1, 0, -1):
+        print(arr_endpoints[i],arr_endpoints[i-1])
+        parametrization = np.append(parametrization ,get_param_T(arr_endpoints[i],arr_endpoints[i-1]))
+    
 
-    return Kstar
+    otherpanels = np.linspace(2*(1/npan),1-2*(1/npan), npan-3)
+    otherpanelsT = np.array([])
+    for i in range(len(otherpanels)-2):
+        otherpanelsT = np.append(otherpanelsT,get_param_T(otherpanels[i],otherpanels[i+1]))
 
-def compute_R_true(aspect,npan):
+    parametrization = np.append(np.append(parametrization, otherpanelsT), list(reversed(1-parametrization)))
+    
+    return parametrization
 
-    Kstar = compute_K_star(aspect, npan)
 
-    npoin = npan * 16
-    R_true = np.linalg.inv(np.eye(npoin) +Kstar)
+    
 
-    return R_true
+
+
+
+
+
 
 
 
@@ -295,7 +307,7 @@ def main_ellipse():
     npoin = s.shape[0]
 
     #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
-    Kcirc = 2*MAinit_ellipse(s, w, aspect)
+    Kcirc = MAinit_ellipse(s, w, aspect)
 
     starind = [i for i in range(npoin-32,npoin)]
     starind += [i for i in range(32)]
