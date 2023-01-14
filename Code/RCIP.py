@@ -267,13 +267,13 @@ def give_fine_mesh_parametrization_ellipse(nsub, npan):
 
     parametrization = np.array([])
     for i in range(len(arr_endpoints)-1, 0, -1):
-        print(arr_endpoints[i],arr_endpoints[i-1])
+        #print(arr_endpoints[i],arr_endpoints[i-1])
         parametrization = np.append(parametrization ,get_param_T(arr_endpoints[i],arr_endpoints[i-1]))
     
 
     otherpanels = np.linspace(2*(1/npan),1-2*(1/npan), npan-3)
     otherpanelsT = np.array([])
-    for i in range(len(otherpanels)-2):
+    for i in range(len(otherpanels)-1):
         otherpanelsT = np.append(otherpanelsT,get_param_T(otherpanels[i],otherpanels[i+1]))
 
     parametrization = np.append(np.append(parametrization, otherpanelsT), list(reversed(1-parametrization)))

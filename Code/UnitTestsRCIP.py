@@ -35,6 +35,14 @@ class TestNaiveMethod(unittest.TestCase):
         plt.scatter(out.real[0,:10], out.imag[0,:10])
         plt.title("zfunc")
         plt.show() """
+
+    def test_give_fine_mesh(self):
+        nsub = 2
+        npan = 8
+        param= give_fine_mesh_parametrization_ellipse(nsub, npan)
+        ellipse = zfunc_ellipse(param, 3)
+        plt.scatter(ellipse.real, ellipse.imag)
+        plt.show()
         
 
     def test_zpfunc_ellipse(self):
@@ -62,7 +70,7 @@ class TestNaiveMethod(unittest.TestCase):
         npan = 10
         s_2, w_2 = zloc_init_ellipse(T, W, nsub, 2, npan)
         s_1, w_1= zloc_init_ellipse(T, W, nsub, 0, npan)
-
+        """ 
         print(s_2.min(), s_2.max())
         print(s_1.min(), s_1.max())
         print(s_1.shape)
@@ -70,7 +78,7 @@ class TestNaiveMethod(unittest.TestCase):
         plt.scatter(np.arange(0,96), s_2, label="s_2")
         plt.scatter(np.arange(0,96), s_1, label="s_1")
         plt.legend()
-        plt.show() 
+        plt.show()  """
         
 
     def test_zinit_ellipse(self):
