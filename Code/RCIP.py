@@ -39,8 +39,6 @@ def IPinit(T, W):
     W_fin = np.diag(W2)
     
     IPW = W_fin @ IP @ np.linalg.inv(W_coa)
-
-    print(IPW.shape)
     
     return IP, IPW
 
@@ -272,6 +270,9 @@ def give_fine_mesh_parametrization_ellipse(nsub, npan):
         parametrization = np.append(parametrization ,get_param_T(arr_endpoints[i],arr_endpoints[i-1]))
         param_weights = np.append(param_weights, W*(arr_endpoints[i-1]-arr_endpoints[i]))
 
+
+
+    start_ind = len(parametrization)
     otherpanels = np.linspace(2*(1/npan),1-2*(1/npan), npan-3)
     otherpanelsT = np.array([])
     otherweights = np.array([])
@@ -279,14 +280,83 @@ def give_fine_mesh_parametrization_ellipse(nsub, npan):
         otherpanelsT = np.append(otherpanelsT,get_param_T(otherpanels[i],otherpanels[i+1]))
         otherweights = np.append(otherweights, W*(otherpanels[i+1]-otherpanels[i]))
 
+    end_in = start_ind + len(otherweights)
+
     parametrization = np.append(np.append(parametrization, otherpanelsT), list(reversed(1-parametrization)))
     weights = np.append(np.append(param_weights, otherweights), list(reversed(param_weights)))
 
-    return parametrization, weights
+    kcirc_indices = np.arange(start_ind, end_in)
+   
 
-def get_K_star_fine(nsub, npan):
-    param = give_fine_mesh_parametrization_ellipse(nsub, npan)
-    K = MAinit_ellipse(param, )
+
+    return parametrization, weights, kcirc_indices
+
+
+
+
+
+def get_K_star_circ_fine(nsub, npan, aspect):
+    param, weights, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
+    
+    Kstar = MAinit_ellipse(param, weights, aspect)
+    K = MAinit_ellipse(param, weights, aspect)
+    kcirc = set(kcirc)
+
+    for i in range(K.shape[0]):
+        for j in range(K.shape[1]):
+            if (i in kcirc) or (j in kcirc):
+                Kstar[i,j] = 0
+
+    return Kstar, (K-Kstar)
+
+
+def get_K_circ_coarse(npan, aspect):
+    s, w = zinit_ellipse(T, W, npan)
+    npoin = s.shape[0]
+
+    #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+    Kcirc = MAinit_ellipse(s, w, aspect)
+
+    starind = [i for i in range(npoin-32,npoin)] #last two panels(16 points/per panel)
+    starind += [i for i in range(32)] #first two panels (16 points/per panel)
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    return Kcirc
+
+
+
+def get_P_helper(nsub):
+    num_blocks = 2*nsub
+    IP, IPW = IPinit(T,  W)
+    
+    retMe = np.zeros(((num_blocks+2) * 16, num_blocks*16))
+    retMe[16:-16,:] = np.eye(num_blocks*16)
+    retMe[:32,:16] = IP
+    retMe[-32:,-16:] = IP
+
+    return retMe
+
+
+
+
+def get_P(npan, nsub):
+    pass
+
+
+
+    #Note that IP takes us from a single panel to a double panel
+
+
+
+
+
+
+
 
 
 
@@ -330,6 +400,16 @@ def main_ellipse():
     Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
     PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
+
+    '''
+    So one interesting thing to note is that zloc_init and zinit do 2 different things. 
+    zinit should be considered the gold standard as this essentially defines
+    the order in which we label nodes when constructing all of our vectors
+    including our kernels. So in other words make sure that you keep this
+    consistent.
+    '''
+
+    
     R_sp = Rcomp_ellipse(aspect,T,W,Pbc,PWbc,nsub,npan)
 
     R = np.eye(npoin)

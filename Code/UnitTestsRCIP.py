@@ -4,6 +4,39 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_get_P_helper(self):
+        plt.figure(1)
+        plt.title("Prolongation 64->96")
+        plt.imshow(get_P_helper(4))
+        plt.figure(2)
+        plt.title("Prolongation 96->128")
+        plt.imshow(get_P_helper(6))
+
+
+
+    def test_plot(self):
+        IP, IPW = IPinit(T,  W)
+
+        theta = np.pi/2
+        lamda = 1
+
+        #Number of panels = 10
+        npan = 10
+        sinter = np.linspace(0, 1, npan+1)
+        sinterdiff = np.ones(npan)/npan
+        nsub = 6
+
+        #z, zp, zpp, nz, w, wzp = zloc_init(theta, T, W, nsub, 2, npan)
+        z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+
+
+        plt.scatter(z.real, z.imag, c='blue')
+        plt.scatter(z.real[:20], z.imag[:20],c='orange')
+        plt.scatter(z.real[-20:], z.imag[-20:],c='green')
+        plt.show()
+
+
+
     def initialize_s(self, npan):
         npoin = 16*npan
         s = np.zeros(npoin)
@@ -37,15 +70,38 @@ class TestNaiveMethod(unittest.TestCase):
         plt.show() """
 
     def test_give_fine_mesh(self):
-        npan = 8
-        param2, weights2= give_fine_mesh_parametrization_ellipse(2, npan)
-        param3, weights3= give_fine_mesh_parametrization_ellipse(3, npan)
+        npan = 10
+        nsub=2
+        param3, weights3, kcirc= give_fine_mesh_parametrization_ellipse(nsub, npan)
         ellipse3 = zfunc_ellipse(param3, 3)
-        plt.scatter(np.arange(0,len(weights3)), param3)
+        #plt.scatter(np.arange(0,len(weights3)), param3)
         #plt.scatter(np.arange(0,len(weights2)),100*weights2)
-        plt.scatter(np.arange(0,len(weights3)),100*weights3)
+        #plt.scatter(np.arange(0,len(weights3)),100*weights3)
+
+
+        #print(len(weights3),len(param3))
+        #plt.scatter((ellipse3.real), ellipse3.imag,c='blue')
+        #plt.scatter((ellipse3.real)[0,kcirc], ellipse3.imag[0,kcirc],c='orange')
+       
         plt.show()
-        
+
+    def test_K_star_fine(self):
+        nsub=2
+        npan=8
+        aspect=3
+
+        Kstar,Kcirc = get_K_star_circ_fine(nsub, npan, aspect)
+
+        plt.figure(1)
+        plt.title("Kstar")
+        plt.imshow(Kstar)
+
+
+        plt.figure(2)
+        plt.title("Kcirc")
+        plt.imshow(Kcirc)
+
+
 
     def test_zpfunc_ellipse(self):
         s = self.initialize_s(10)
