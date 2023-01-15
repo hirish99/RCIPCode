@@ -330,8 +330,7 @@ def get_K_circ_coarse(npan, aspect):
 
 
 
-def get_P_helper(nsub):
-    num_blocks = 2*nsub
+def get_P_helper(num_blocks):
     IP, IPW = IPinit(T,  W)
     
     retMe = np.zeros(((num_blocks+2) * 16, num_blocks*16))
@@ -341,14 +340,11 @@ def get_P_helper(nsub):
 
     return retMe
 
-
-
-
 def get_P(npan, nsub):
-    pass
-
-
-
+    P = get_P_helper(npan)
+    for i in range(1, nsub):
+        P = get_P_helper(npan+2*i) @ P
+    return P
     #Note that IP takes us from a single panel to a double panel
 
 

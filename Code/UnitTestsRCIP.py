@@ -4,6 +4,18 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_get_P(self):
+        plt.figure(3)
+        plt.title("True 64->128")
+        P = get_P_helper(6) @ get_P_helper(4)
+        plt.imshow(P)
+
+        plt.figure(4)
+        plt.title("10 Panels")
+        plt.imshow(get_P(10,2))
+        print("P SHAPE:", get_P(10,2).shape)
+
+
     def test_get_P_helper(self):
         plt.figure(1)
         plt.title("Prolongation 64->96")
