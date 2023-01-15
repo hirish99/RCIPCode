@@ -4,8 +4,13 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_get_PW(self):
+        PW = get_PW(10,2)
+        plt.imshow(PW)
+        plt.show()
+
     def test_get_P(self):
-        plt.figure(3)
+        """         plt.figure(3)
         plt.title("True 64->128")
         P = get_P_helper(6) @ get_P_helper(4)
         plt.imshow(P)
@@ -13,16 +18,16 @@ class TestNaiveMethod(unittest.TestCase):
         plt.figure(4)
         plt.title("10 Panels")
         plt.imshow(get_P(10,2))
-        print("P SHAPE:", get_P(10,2).shape)
+        print("P SHAPE:", get_P(10,2).shape) """
 
 
     def test_get_P_helper(self):
-        plt.figure(1)
+        """         plt.figure(1)
         plt.title("Prolongation 64->96")
         plt.imshow(get_P_helper(4))
         plt.figure(2)
         plt.title("Prolongation 96->128")
-        plt.imshow(get_P_helper(6))
+        plt.imshow(get_P_helper(6)) """
 
 
 
@@ -42,10 +47,10 @@ class TestNaiveMethod(unittest.TestCase):
         z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
 
 
-        plt.scatter(z.real, z.imag, c='blue')
+        """ plt.scatter(z.real, z.imag, c='blue')
         plt.scatter(z.real[:20], z.imag[:20],c='orange')
         plt.scatter(z.real[-20:], z.imag[-20:],c='green')
-        plt.show()
+        plt.show() """
 
 
 
@@ -95,7 +100,7 @@ class TestNaiveMethod(unittest.TestCase):
         #plt.scatter((ellipse3.real), ellipse3.imag,c='blue')
         #plt.scatter((ellipse3.real)[0,kcirc], ellipse3.imag[0,kcirc],c='orange')
        
-        plt.show()
+        #plt.show()
 
     def test_K_star_fine(self):
         nsub=2
@@ -104,14 +109,14 @@ class TestNaiveMethod(unittest.TestCase):
 
         Kstar,Kcirc = get_K_star_circ_fine(nsub, npan, aspect)
 
-        plt.figure(1)
+        """         plt.figure(1)
         plt.title("Kstar")
         plt.imshow(Kstar)
 
 
         plt.figure(2)
         plt.title("Kcirc")
-        plt.imshow(Kcirc)
+        plt.imshow(Kcirc) """
 
 
 

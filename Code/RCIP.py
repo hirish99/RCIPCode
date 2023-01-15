@@ -342,10 +342,25 @@ def get_P_helper(num_blocks):
 
 def get_P(npan, nsub):
     P = get_P_helper(npan)
-    for i in range(1, nsub):
+    for i in range(1, nsub-1):
         P = get_P_helper(npan+2*i) @ P
     return P
     #Note that IP takes us from a single panel to a double panel
+
+def get_PW(npan, nsub):
+    W_fin = give_fine_mesh_parametrization_ellipse(nsub, npan)[1]
+    W_coarse = zinit_ellipse(T,  W, npan)[1]
+    W_fin = np.diag(W_fin)
+    W_coarse_inv = np.diag(1/W_coarse)
+    P = get_P(npan, nsub)
+
+    print("W_fin shape:", W_fin.shape)
+    print("P shape:", P.shape)
+    print("W_coarse shape:", W_coarse_inv.shape)
+
+    PW = W_fin @ P @ W_coarse_inv
+
+    return PW
 
 
 
