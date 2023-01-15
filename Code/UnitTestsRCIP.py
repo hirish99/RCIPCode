@@ -37,12 +37,13 @@ class TestNaiveMethod(unittest.TestCase):
         plt.show() """
 
     def test_give_fine_mesh(self):
-        nsub = 2
         npan = 8
-        param, weights= give_fine_mesh_parametrization_ellipse(nsub, npan)
-        ellipse = zfunc_ellipse(param, 3)
-        plt.scatter(np.arange(0,len(weights)), ellipse.real)
-        plt.scatter(np.arange(0,len(weights)),100*weights)
+        param2, weights2= give_fine_mesh_parametrization_ellipse(2, npan)
+        param3, weights3= give_fine_mesh_parametrization_ellipse(3, npan)
+        ellipse3 = zfunc_ellipse(param3, 3)
+        plt.scatter(np.arange(0,len(weights3)), param3)
+        #plt.scatter(np.arange(0,len(weights2)),100*weights2)
+        plt.scatter(np.arange(0,len(weights3)),100*weights3)
         plt.show()
         
 
