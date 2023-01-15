@@ -4,10 +4,15 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_PW_P(self):
+        PW = get_PW(10,2)
+        P = get_P(10,2)
+        print(np.max(PW.T @ P - 2*np.eye(16*10)))
+
     def test_get_PW(self):
         PW = get_PW(10,2)
-        plt.imshow(PW)
-        plt.show()
+        """ plt.imshow(PW)
+        plt.show() """
 
     def test_get_P(self):
         """         plt.figure(3)
