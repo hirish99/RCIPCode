@@ -289,7 +289,7 @@ def give_fine_mesh_parametrization_ellipse(nsub, npan):
    
 
 
-    return parametrization, weights, kcirc_indices
+    return parametrization, weights/2, kcirc_indices
 
 
 
