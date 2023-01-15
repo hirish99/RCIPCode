@@ -5,13 +5,20 @@ import unittest
 class TestNaiveMethod(unittest.TestCase):
 
     def test_eq_16(self):
-        pass
+        nsub = 2
+        npan = 10
+        aspect = 3
+        K_circ_fine = get_K_star_circ_fine(nsub, npan, aspect)[1]
+        K_circ_coarse = get_K_circ_coarse(npan, aspect)
+        P = get_P(npan, nsub)
+        PW = get_PW(npan, nsub)
+        print(np.max(K_circ_fine - P@K_circ_coarse@PW.T))
 
     def test_PW_P(self):
         npan = 10
         PW = get_PW(npan,2)
         P = get_P(npan,2)
-        print(np.max(PW.T @ P - np.eye(16*npan)))
+        #print(np.max(PW.T @ P - np.eye(16*npan)))
 
     def test_get_PW(self):
         PW = get_PW(10,2)

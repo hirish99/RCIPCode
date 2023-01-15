@@ -354,9 +354,9 @@ def get_PW(npan, nsub):
     W_coarse_inv = np.diag(1/W_coarse)
     P = get_P(npan, nsub)
 
-    print("W_fin shape:", W_fin.shape)
+    """ print("W_fin shape:", W_fin.shape)
     print("P shape:", P.shape)
-    print("W_coarse shape:", W_coarse_inv.shape)
+    print("W_coarse shape:", W_coarse_inv.shape) """
 
     PW = W_fin @ P @ W_coarse_inv
 
