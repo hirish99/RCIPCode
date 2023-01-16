@@ -258,7 +258,7 @@ def give_fine_mesh_parametrization_ellipse(nsub, npan):
     #to tau^*
     start = 2/npan
     arr_endpoints = []
-    for i in range(nsub+1):
+    for i in range(nsub+2):
         arr_endpoints.append(start)
         start /= 2
     arr_endpoints.append(0)
@@ -274,6 +274,7 @@ def give_fine_mesh_parametrization_ellipse(nsub, npan):
 
     start_ind = len(parametrization)
     otherpanels = np.linspace(2*(1/npan),1-2*(1/npan), npan-3)
+
     otherpanelsT = np.array([])
     otherweights = np.array([])
     for i in range(len(otherpanels)-1):
@@ -342,7 +343,7 @@ def get_P_helper(num_blocks):
 
 def get_P(npan, nsub):
     P = get_P_helper(npan)
-    for i in range(1, nsub-1):
+    for i in range(1, nsub):
         P = get_P_helper(npan+2*i) @ P
     return P
     #Note that IP takes us from a single panel to a double panel
@@ -356,11 +357,26 @@ def get_PW(npan, nsub):
 
     """ print("W_fin shape:", W_fin.shape)
     print("P shape:", P.shape)
-    print("W_coarse shape:", W_coarse_inv.shape) """
+    print("W_coarse shape:", W_coarse_inv.shape)  """
 
     PW = W_fin @ P @ W_coarse_inv
 
     return PW
+
+def get_R_true(npan, nsub, aspect):
+    P = get_P(npan, nsub)
+    PW_T = get_PW(npan, nsub).T
+
+    Kstar_fine = get_K_star_circ_fine(nsub, npan, aspect)[0]
+
+    """ print("P shape:", P.shape)
+    print("PW_T shape:", PW_T.shape)
+    print("Kstar_fine shape:", Kstar_fine.shape) """
+    npoin = Kstar_fine.shape[0]
+
+    #R = PW_T @ np.linalg.inv(np.eye(npoin) +  Kstar_fine) @ P
+    return R
+    #Complete
 
 
 
@@ -423,6 +439,8 @@ def main_ellipse():
     
     R_sp = Rcomp_ellipse(aspect,T,W,Pbc,PWbc,nsub,npan)
 
+
+
     R = np.eye(npoin)
     #Not the most efficient but quadratic in the order of quadrature
     l=0
@@ -433,6 +451,9 @@ def main_ellipse():
             m+=1
         l+=1
 
+
+    # get true value of R
+    R = get_R_true(npan, nsub, aspect)
 
 
     I_coa = np.eye(npoin)
