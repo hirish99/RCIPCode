@@ -4,6 +4,67 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_get_R_true(self):
+        npan = 10
+        nsub = 1
+        aspect = 3
+        R = get_R_true(npan, nsub, aspect)
+
+        kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)[2]
+
+
+        #I'm just verifying that R only has a single full block 64x64
+        max_difference = 0
+        i_max = 0
+        j_max = 0
+        max_differences = []
+        for i in range(R.shape[0]):
+            for j in range(R.shape[1]):
+                if (i in kcirc) and (j in kcirc):
+                    if i != j and np.abs(R[i,j]) > max_difference:
+                        max_difference = np.abs(R[i,j])
+                        i_max = i
+                        j_max = j
+                        max_differences.append(R[i,j])
+
+        print(i_max, j_max)
+        #TO DO: FIGURE OUT WHY I_MAX AND J_MAX ARE VERY NON-ZERO
+
+    def test_andreas_jan_17_log_plot_inv(self):
+        npan = 10
+        nsub = 2
+        aspect = 3
+        Kstar_fine = get_K_star_circ_fine(nsub, npan, aspect)[0]
+        P = get_P(npan, nsub)
+        PW_T = get_PW(npan, nsub).T
+        npoin = Kstar_fine.shape[0]
+
+        plt.title("Log Plot of inv(I+K*)")
+        plt.imshow(np.log(1e-16+np.abs(np.linalg.inv(np.eye(npoin) +  Kstar_fine))))
+        plt.colorbar()
+        plt.show()
+
+        plt.title("PW.T")
+        plt.imshow(PW_T)
+        plt.colorbar()
+        plt.show()
+
+        plt.title("P")
+        plt.imshow(P)
+        plt.colorbar()
+        plt.show()
+
+    def test_andreas_jan_17_log_plot(self):
+        npan = 10
+        nsub = 2
+        aspect = 3
+
+        Kstar_fine = get_K_star_circ_fine(nsub, npan, aspect)[0]
+        #plt.title("Log Plot of Kstar_fine")
+        #plt.imshow(np.log(1e-16+np.abs(Kstar_fine)))
+        #plt.colorbar()
+        #plt.show()
+    """ 
     def test_fine_again(self):
         nsub = 2
         npan = 10
@@ -40,7 +101,7 @@ class TestNaiveMethod(unittest.TestCase):
         print(max_difference, i_max, j_max, max_differences)
                     
 
-
+    """
 
 
     def test_eq_16(self):

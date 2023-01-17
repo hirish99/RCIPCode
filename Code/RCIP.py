@@ -369,6 +369,8 @@ def get_R_true(npan, nsub, aspect):
 
     Kstar_fine = get_K_star_circ_fine(nsub, npan, aspect)[0]
 
+    print(Kstar_fine[66:87,66:70])
+
     """ print("P shape:", P.shape)
     print("PW_T shape:", PW_T.shape)
     print("Kstar_fine shape:", Kstar_fine.shape) """
