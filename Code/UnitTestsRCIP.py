@@ -9,12 +9,13 @@ class TestNaiveMethod(unittest.TestCase):
         npan = 10
         print("START")
         param,weights,kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
+        print(kcirc)
         print("END")
 
 
     def test_get_R_true(self):
-        pass
-        """ npan = 10
+
+        npan = 10
         nsub = 1
         aspect = 3
         R = get_R_true(npan, nsub, aspect)
@@ -29,23 +30,15 @@ class TestNaiveMethod(unittest.TestCase):
         max_differences = []
         for i in range(R.shape[0]):
             for j in range(R.shape[1]):
-                if (i in kcirc) or (j in kcirc):
+                if (i in kcirc) and (j in kcirc):
                     if i != j and np.abs(R[i,j]) > max_difference:
                         max_difference = np.abs(R[i,j])
                         i_max = i
                         j_max = j
                         max_differences.append(R[i,j])
 
-        print(max_difference, i_max, j_max, max_differences) """
+        print(max_difference, i_max, j_max, max_differences)
                     
-
-
-        #Quickly verify that R only has a single full 64,64 block
-
-
-
-        
-
 
 
 
@@ -58,13 +51,13 @@ class TestNaiveMethod(unittest.TestCase):
         K_circ_coarse = get_K_circ_coarse(npan, aspect)
         P = get_P(npan, nsub)
         PW = get_PW(npan, nsub)
-        print(np.max(K_circ_fine - P@K_circ_coarse@PW.T))
+        """ print(np.max(K_circ_fine - P@K_circ_coarse@PW.T)) """
 
     def test_PW_P(self):
         npan = 10
         PW = get_PW(npan,2)
         P = get_P(npan,2)
-        print(np.max(PW.T @ P - np.eye(16*npan)))
+        """ print(np.max(PW.T @ P - np.eye(16*npan))) """
 
     def test_get_PW(self):
         PW = get_PW(10,2)

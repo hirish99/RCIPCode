@@ -232,11 +232,11 @@ def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
 
 def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
     R = None
-    for level in range(1, nsub+1):
+    for level in range(0, nsub):
         z,zp,zpp,nz,w,wzp = zloc_init(theta,T,W,nsub,level,npan)
         K = MAinit(z,zp,zpp,nz,w,wzp,96)
         MAT = np.eye(96) + lamda*K
-        if level == 1:
+        if level == 0:
             R = np.linalg.inv(MAT[16:80,16:80])
         MAT[16:80,16:80] = np.linalg.inv(R)
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
@@ -374,7 +374,22 @@ def get_R_true(npan, nsub, aspect):
     print("Kstar_fine shape:", Kstar_fine.shape) """
     npoin = Kstar_fine.shape[0]
 
-    #R = PW_T @ np.linalg.inv(np.eye(npoin) +  Kstar_fine) @ P
+    plt.title("PW_T")
+    plt.imshow(PW_T)
+    plt.show()
+
+    plt.title("P")
+    plt.imshow(P)
+    plt.show()
+
+    plt.title("K*")
+    plt.imshow(Kstar_fine)
+    plt.show()
+
+    plt.title("inv(I+K*)")
+    plt.imshow(np.linalg.inv(np.eye(npoin) +  Kstar_fine))
+    plt.show()
+    R = PW_T @ np.linalg.inv(np.eye(npoin) +  Kstar_fine) @ P
     return R
     #Complete
 
@@ -453,7 +468,7 @@ def main_ellipse():
 
 
     # get true value of R
-    R = get_R_true(npan, nsub, aspect)
+    #R = get_R_true(npan, nsub, aspect)
 
 
     I_coa = np.eye(npoin)
