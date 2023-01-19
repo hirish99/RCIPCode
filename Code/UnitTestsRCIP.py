@@ -4,7 +4,105 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
-    def test_R_convergence(self):
+    def test_eq_15(self):
+
+        #FINE DENSITY COMPUTATION 
+        nsub = 2
+        npan = 10
+        aspect = 3
+        K_fine = get_K_fine(nsub, npan, aspect)
+
+        s = give_fine_mesh_parametrization_ellipse(nsub, npan)[0]
+        z = ellipse(s, aspect)
+        z = z[0,:]+complex(0,1)*z[1,:]
+
+        test_charge = np.array([-2,2])
+        RHS_fine = 2*get_bc_conditions([test_charge], z) 
+
+        LHS_fine = np.eye(K_fine.shape[0]) + K_fine
+        density_fine = gmres(LHS_fine, RHS_fine)[0]
+        #FINE DENSITY COMPUTATION 
+
+        #Transformed Density Computation
+        IP, IPW = IPinit(T,  W)
+
+        #Number of panels = 10
+
+        s, w = zinit_ellipse(T,  W, npan)
+        z = zfunc_ellipse(s, aspect)
+        z = z[0]
+        npoin = s.shape[0]
+
+        #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+        Kcirc = MAinit_ellipse(s, w, aspect)
+
+        starind = [i for i in range(npoin-32,npoin)]
+        starind += [i for i in range(32)]
+        bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+        for i in starind:
+            for j in starind:
+                bmask[i,j]=1
+        Kcirc[bmask] = 0
+
+        Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+        PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+        '''
+        So one interesting thing to note is that zloc_init and zinit do 2 different things. 
+        zinit should be considered the gold standard as this essentially defines
+        the order in which we label nodes when constructing all of our vectors
+        including our kernels. So in other words make sure that you keep this
+        consistent.
+        '''
+        R_sp = Rcomp_ellipse(aspect,T,W,Pbc,PWbc,nsub,npan)
+
+        R = np.eye(npoin)
+        #Not the most efficient but quadratic in the order of quadrature
+        l=0
+        for i in starind:
+            m=0
+            for j in starind:
+                R[i,j] = R_sp[l,m]
+                m+=1
+            l+=1
+
+
+        # get true value of R
+        #R = get_R_true(npan, nsub, aspect)
+
+
+        I_coa = np.eye(npoin)
+
+        LHS = I_coa + (Kcirc@R)
+        #pot_boundary = np.loadtxt('bc_potential.np')
+        
+        test_charge = np.array([-2,2])
+        RHS = 2*get_bc_conditions([test_charge], z)
+
+        density_tilde = gmres(LHS, RHS)[0]
+
+        ## CHECK
+
+        P_true = get_P(npan, nsub)
+
+        K_star_fine = get_K_star_circ_fine(nsub, npan, aspect)[0]
+
+        print(density_fine.shape)
+        print(K_star_fine.shape)
+
+        print((np.eye(K_star_fine.shape[0])+K_star_fine)@ density_fine - P_true @ density_tilde)
+        print(np.mean(P_true @ density_tilde))
+
+
+
+
+
+
+    def test_LHS(self):
+        pass
+
+    def test_R_comp(self):
         npan = 10
         nsub = 2
         aspect = 3
@@ -47,10 +145,10 @@ class TestNaiveMethod(unittest.TestCase):
         aspect = 3
         R = get_R_true(npan, nsub, aspect)
 
-        plt.title("Log Plot of R")
+        """ plt.title("Log Plot of R")
         plt.imshow(np.log(1e-16+np.abs(R)))
         plt.colorbar()
-        plt.show()
+        plt.show() """
 
         """ kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)[2]
 
@@ -81,20 +179,20 @@ class TestNaiveMethod(unittest.TestCase):
         PW_T = get_PW(npan, nsub).T
         npoin = Kstar_fine.shape[0]
 
-        plt.title("Log Plot of inv(I+K*)")
+        """ plt.title("Log Plot of inv(I+K*)")
         plt.imshow(np.log(1e-16+np.abs(np.linalg.inv(np.eye(npoin) +  Kstar_fine))))
         plt.colorbar()
-        plt.show()
+        plt.show() """
 
-        plt.title("PW.T")
+        """ plt.title("PW.T")
         plt.imshow(PW_T)
         plt.colorbar()
-        plt.show()
+        plt.show() """
 
-        plt.title("P")
+        """ plt.title("P")
         plt.imshow(P)
         plt.colorbar()
-        plt.show()
+        plt.show() """
 
     def test_andreas_jan_17_log_plot(self):
         npan = 10

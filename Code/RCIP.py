@@ -314,6 +314,11 @@ def get_K_star_circ_fine(nsub, npan, aspect):
 
     return Kstar, (K-Kstar)
 
+def get_K_fine(nsub, npan, aspect):
+    param, weights, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
+    K = MAinit_ellipse(param, weights, aspect)
+    return K
+
 
 def get_K_circ_coarse(npan, aspect):
     s, w = zinit_ellipse(T, W, npan)
@@ -373,14 +378,14 @@ def get_R_true(npan, nsub, aspect):
 
     Kstar_fine = get_K_star_circ_fine(nsub, npan, aspect)[0]
 
-    print(Kstar_fine[66:87,66:70])
+
 
     """ print("P shape:", P.shape)
     print("PW_T shape:", PW_T.shape)
     print("Kstar_fine shape:", Kstar_fine.shape) """
     npoin = Kstar_fine.shape[0]
 
-    plt.title("PW_T")
+    """ plt.title("PW_T")
     plt.imshow(PW_T)
     plt.show()
 
@@ -394,7 +399,7 @@ def get_R_true(npan, nsub, aspect):
 
     plt.title("inv(I+K*)")
     plt.imshow(np.linalg.inv(np.eye(npoin) +  Kstar_fine))
-    plt.show()
+    plt.show() """
     R = PW_T @ np.linalg.inv(np.eye(npoin) +  Kstar_fine) @ P
     return R
     #Complete
@@ -448,7 +453,6 @@ def main_ellipse():
     Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
     PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
-
     '''
     So one interesting thing to note is that zloc_init and zinit do 2 different things. 
     zinit should be considered the gold standard as this essentially defines
@@ -456,11 +460,7 @@ def main_ellipse():
     including our kernels. So in other words make sure that you keep this
     consistent.
     '''
-
-    
     R_sp = Rcomp_ellipse(aspect,T,W,Pbc,PWbc,nsub,npan)
-
-
 
     R = np.eye(npoin)
     #Not the most efficient but quadratic in the order of quadrature
@@ -478,6 +478,7 @@ def main_ellipse():
 
 
     I_coa = np.eye(npoin)
+
     LHS = I_coa + (Kcirc@R)
     #pot_boundary = np.loadtxt('bc_potential.np')
     
