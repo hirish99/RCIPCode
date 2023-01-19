@@ -223,7 +223,7 @@ def MAinit(z,zp,zpp,nz,w,wzp,npoin):
 
 def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
     R = None
-    for level in range(0, nsub):
+    for level in range(0, nsub+1):
         s, w = zloc_init_ellipse(T, W, nsub, level, npan)
         K = MAinit_ellipse(s, w, aspect)
         #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2

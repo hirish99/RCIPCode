@@ -4,6 +4,43 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_R_convergence(self):
+        npan = 10
+        nsub = 2
+        aspect = 3
+        IP, IPW = IPinit(T,  W)
+        Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+        PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+        R_sp = Rcomp_ellipse(aspect,T,W,Pbc,PWbc,nsub,npan)
+
+
+        s, w = zinit_ellipse(T,  W, npan)
+        z = zfunc_ellipse(s, aspect)
+        z = z[0]
+        npoin = s.shape[0]
+
+        #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 
+        starind = [i for i in range(npoin-32,npoin)]
+        starind += [i for i in range(32)]
+
+        R = np.eye(npoin)
+        #Not the most efficient but quadratic in the order of quadrature
+        l=0
+        for i in starind:
+            m=0
+            for j in starind:
+                R[i,j] = R_sp[l,m]
+                m+=1
+            l+=1
+        
+        R_true = get_R_true(npan, nsub, aspect)
+
+        plt.title("Difference Between R/R_true")
+        plt.imshow(np.log(np.abs(R-R_true)+1e-15))
+        plt.colorbar()
+        plt.show()
+
+
     def test_get_R_true(self):
         npan = 10
         nsub = 1
