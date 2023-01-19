@@ -146,9 +146,12 @@ def zloc_init(theta, T, W, nsub, level, npan):
     return z,zp,zpp,nz,w,wzp
 
 def zloc_init_ellipse(T, W, nsub, level, npan):
-    #level goes from 0 to nsub-1
+    #level goes from 0 to nsub. 
+    #returns a type b mesh which is used to compute
+    #the kernel
     #different from the paper where level goes from 1,nsub
     #note that nsub represents a type b mesh on \tau^*!!!
+    #
     denom = 2**(nsub-level) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
     s_new = np.append(list(reversed(1-s_new)),s_new)
@@ -219,12 +222,13 @@ def MAinit(z,zp,zpp,nz,w,wzp,npoin):
     
 
 def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
-    for level in range(1, nsub+1):
+    R = None
+    for level in range(0, nsub):
         s, w = zloc_init_ellipse(T, W, nsub, level, npan)
         K = MAinit_ellipse(s, w, aspect)
         #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
         MAT = np.eye(96) + K
-        if level == 1:
+        if level == 0:
             R = np.linalg.inv(MAT[16:80,16:80])
         MAT[16:80,16:80] = np.linalg.inv(R)
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc

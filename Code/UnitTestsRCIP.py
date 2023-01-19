@@ -10,7 +10,12 @@ class TestNaiveMethod(unittest.TestCase):
         aspect = 3
         R = get_R_true(npan, nsub, aspect)
 
-        kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)[2]
+        plt.title("Log Plot of R")
+        plt.imshow(np.log(1e-16+np.abs(R)))
+        plt.colorbar()
+        plt.show()
+
+        """ kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)[2]
 
 
         #I'm just verifying that R only has a single full block 64x64
@@ -27,7 +32,7 @@ class TestNaiveMethod(unittest.TestCase):
                         j_max = j
                         max_differences.append(R[i,j])
 
-        print(i_max, j_max)
+        print(i_max, j_max) """
         #TO DO: FIGURE OUT WHY I_MAX AND J_MAX ARE VERY NON-ZERO
 
     def test_andreas_jan_17_log_plot_inv(self):
