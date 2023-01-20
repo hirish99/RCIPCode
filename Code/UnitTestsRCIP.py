@@ -4,6 +4,49 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def verify_rho_fine(self):
+        # YOU NEED TO WRITE THIS
+        pass
+
+    def test_eq_7_RCIP_LONG(self):
+        #FINE DENSITY COMPUTATION 
+        nsub = 2
+        npan = 10
+        aspect = 3
+        K_fine = get_K_fine(nsub, npan, aspect)
+
+        s, w_fine = give_fine_mesh_parametrization_ellipse(nsub, npan)[0:2]
+        z = ellipse(s, aspect)
+        z = z[0,:]+complex(0,1)*z[1,:]
+
+        test_charge = np.array([-2,2])
+        RHS_fine = 2*get_bc_conditions([test_charge], z) 
+
+        LHS_fine = np.eye(K_fine.shape[0]) + K_fine
+        density_fine = gmres(LHS_fine, RHS_fine)[0]
+
+        target = np.array([0,0.2])
+
+        z_list = np.empty((K_fine.shape[0],2))
+        z_list[:,0] = z.real
+        z_list[:,1] = z.imag
+        f_fine = f(z_list, target)
+
+        print(f_fine)
+
+        # YOU REALLY NEED TO WRITE A UNIT TEST VERIFYING DENSITY_FINE!!!
+        print(np.sum(density_fine * w_fine))
+
+
+
+
+
+
+
+
+
+        
+
     def test_eq_15(self):
 
         #FINE DENSITY COMPUTATION 
@@ -88,11 +131,11 @@ class TestNaiveMethod(unittest.TestCase):
 
         K_star_fine = get_K_star_circ_fine(nsub, npan, aspect)[0]
 
-        print(density_fine.shape)
-        print(K_star_fine.shape)
+        #print(density_fine.shape)
+        #print(K_star_fine.shape)
 
-        print((np.eye(K_star_fine.shape[0])+K_star_fine)@ density_fine - P_true @ density_tilde)
-        print(np.mean(P_true @ density_tilde))
+        #print((np.eye(K_star_fine.shape[0])+K_star_fine)@ density_fine - P_true @ density_tilde)
+        #print(np.mean(P_true @ density_tilde))
 
 
 

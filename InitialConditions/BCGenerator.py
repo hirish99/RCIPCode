@@ -21,13 +21,16 @@ def get_coordinates_boundary_ellipse(t):
     ])
     return retMe.reshape(2,-1)
 
-npan = 40
+npan = 10
 np.savetxt('npan.np', np.array([0, int(npan)]))
 npoin = npan*16
 panel_boundaries = np.linspace(0, 1, npan+1)
 x,y = get_coordinates_boundary_ellipse(make_panels(panel_boundaries))
+
+
+
 point_charges = np.array([np.array([-2,2])])
-target = np.array([0.5,0])
+target = np.array([0,0.2])
 
 
 plt.scatter(x,y)
