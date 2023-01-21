@@ -16,20 +16,21 @@ class TestNaiveMethod(unittest.TestCase):
         aspect = 1
         s, w_fine, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
 
-        print("Sum of Weights:", np.sum(w_fine))
+        #print("Sum of Weights:", np.sum(w_fine))
 
         awzp = np.abs(zpfunc_ellipse(s, aspect))
 
-        print(np.sum(awzp * w_fine))
+        self.assertTrue(np.sum(awzp * w_fine) == 2*np.pi)
 
 
 
 
-    def verify_rho_fine(self):
+    def test_verify_rho_fine(self):
         #FINE DENSITY COMPUTATION 
         nsub = 2
         npan = 10
         aspect = 3
+
         K_fine = get_K_fine(nsub, npan, aspect)
 
         s, w_fine = give_fine_mesh_parametrization_ellipse(nsub, npan)[0:2]
@@ -41,6 +42,10 @@ class TestNaiveMethod(unittest.TestCase):
 
         LHS_fine = np.eye(K_fine.shape[0]) + K_fine
         density_fine = gmres(LHS_fine, RHS_fine)[0]
+        
+        param, weights, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
+        true_density = get_density_true(param, weights, aspect)
+        print(true_density-density_fine)
 
     def test_eq_7_RCIP_LONG(self):
         #FINE DENSITY COMPUTATION 
@@ -200,10 +205,10 @@ class TestNaiveMethod(unittest.TestCase):
         
         R_true = get_R_true(npan, nsub, aspect)
 
-        plt.title("Difference Between R/R_true")
-        plt.imshow(np.log(np.abs(R-R_true)+1e-15))
-        plt.colorbar()
-        plt.show()
+        #plt.title("Difference Between R/R_true")
+        #plt.imshow(np.log(np.abs(R-R_true)+1e-15))
+        #plt.colorbar()
+        #plt.show()
 
 
     def test_get_R_true(self):

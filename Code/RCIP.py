@@ -13,6 +13,37 @@ from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellips
 n = 16
 T, W, _ = sps.legendre(n).weights.T
 
+
+def get_density_true(parametrization, weights, aspect):
+    npoin = parametrization.shape[0]
+    complex_positions = zfunc_ellipse(parametrization, aspect)
+    complex_positions = complex_positions[0]
+    curve_nodes = [complex_positions.real, complex_positions.imag]
+    curve_nodes = np.array(curve_nodes)
+
+    sympy_kern = sympy_kernel(3)
+    D_K = np.zeros((npoin, npoin))
+    for i in range(npoin):
+        D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
+    for i in range(npoin):
+        D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
+
+
+    W_shape = np.diag(np.abs(zpfunc_ellipse(parametrization, aspect))[0])
+    #print("D_K", D_K.shape)
+    #print("W_Shape",np.abs(zpfunc_ellipse(parametrization, aspect))[0].shape)
+
+    D_KW = D_K @ W_shape
+    LHS = 0.5*np.eye(npoin) + D_KW
+    #RHS = np.loadtxt("../InitialConditions/bc_potential.np")
+    test_charge = np.array([-2,2])
+    RHS = get_bc_conditions([test_charge], complex_positions)
+    #assert(np.max(np.abs(RHS-get_bc_conditions([test_charge], complex_positions)))<=1e-6)
+   
+    density = gmres(LHS, RHS)[0]
+
+    return density
+
 def IPinit(T, W):
     #A and AA are vandermonde matrices.
     #Essentially 1, x,  x^2, etc.
