@@ -5,12 +5,16 @@ import matplotlib.pyplot as plt
 import cmath as cm
 from scipy.sparse.linalg import gmres
 import sympy as sp
+import warnings
 
 n = 16
 lege_nodes, lege_weights, _ = sps.legendre(n).weights.T
 
 class sympy_kernel:
     def __init__(self, aspect):
+        import warnings
+        warnings.filterwarnings("ignore")
+
         t_p = sp.Symbol('t_p')
         t = sp.Symbol('t')
         a = sp.Symbol('a')
@@ -260,7 +264,7 @@ def main():
     #plt.axis('equal')
     #plt.title('Positions of Nodes')
     #plt.show()
-
+    
     #D_K_old = compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization)
     sympy_kern = sympy_kernel(3)
     D_K = np.zeros((npoin, npoin))

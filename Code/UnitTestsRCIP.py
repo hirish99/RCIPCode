@@ -1,12 +1,46 @@
 from RCIP import *
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+
+
+
+
+    def test_check_give_fine_mesh(self):
+        nsub = 2
+        npan = 10
+        aspect = 1
+        s, w_fine, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
+
+        print("Sum of Weights:", np.sum(w_fine))
+
+        awzp = np.abs(zpfunc_ellipse(s, aspect))
+
+        print(np.sum(awzp * w_fine))
+
+
+
+
     def verify_rho_fine(self):
-        # YOU NEED TO WRITE THIS
-        pass
+        #FINE DENSITY COMPUTATION 
+        nsub = 2
+        npan = 10
+        aspect = 3
+        K_fine = get_K_fine(nsub, npan, aspect)
+
+        s, w_fine = give_fine_mesh_parametrization_ellipse(nsub, npan)[0:2]
+        z = ellipse(s, aspect)
+        z = z[0,:]+complex(0,1)*z[1,:]
+
+        test_charge = np.array([-2,2])
+        RHS_fine = 2*get_bc_conditions([test_charge], z) 
+
+        LHS_fine = np.eye(K_fine.shape[0]) + K_fine
+        density_fine = gmres(LHS_fine, RHS_fine)[0]
 
     def test_eq_7_RCIP_LONG(self):
         #FINE DENSITY COMPUTATION 
@@ -32,20 +66,10 @@ class TestNaiveMethod(unittest.TestCase):
         z_list[:,1] = z.imag
         f_fine = f(z_list, target)
 
-        print(f_fine)
+        #print(f_fine)
 
         # YOU REALLY NEED TO WRITE A UNIT TEST VERIFYING DENSITY_FINE!!!
-        print(np.sum(density_fine * w_fine))
-
-
-
-
-
-
-
-
-
-        
+        #print(np.sum(density_fine * w_fine))
 
     def test_eq_15(self):
 

@@ -4,6 +4,7 @@ import cmath as cm
 from scipy.linalg import block_diag
 from scipy.sparse.linalg import gmres
 import scipy.special as sps
+import warnings
 
 from Naive import get_bc_conditions
 from Naive import sympy_kernel, test_curve_weights
