@@ -6,7 +6,11 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_f(self):
+        s = np.array([[1,0], [1,0]])
+        target = np.array([2, 0])
 
+        print("F:", f(s, target))
 
 
 
