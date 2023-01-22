@@ -29,7 +29,7 @@ def get_density_true(parametrization, weights, aspect):
         D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
 
 
-    W_shape = np.diag(np.abs(zpfunc_ellipse(parametrization, aspect))[0])
+    W_shape = np.diag(weights * np.abs(zpfunc_ellipse(parametrization, aspect))[0])
     #print("D_K", D_K.shape)
     #print("W_Shape",np.abs(zpfunc_ellipse(parametrization, aspect))[0].shape)
 
@@ -184,7 +184,7 @@ def zloc_init_ellipse(T, W, nsub, level, npan):
     #different from the paper where level goes from 1,nsub
     #note that nsub represents a type b mesh on \tau^*!!!
     #
-    denom = 2**(nsub-level) * npan
+    denom = 2**(nsub-(level+1)) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
     s_new = np.append(list(reversed(1-s_new)),s_new)
     w = np.append(np.append(W/4, W/4), W/2)/denom
@@ -226,7 +226,7 @@ def MAinit_ellipse(parametrization, weights, aspect):
     for i in range(npoin):
         D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
 
-    W_shape = np.diag(np.abs(zpfunc_ellipse(parametrization, aspect))[0])
+    W_shape = np.diag(weights * np.abs(zpfunc_ellipse(parametrization, aspect))[0])
 
     D_KW = D_K @ W_shape
 
@@ -255,7 +255,9 @@ def MAinit(z,zp,zpp,nz,w,wzp,npoin):
 
 def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
     R = None
-    for level in range(0, nsub+1):
+    #This I don't particularily believe. Nvm.
+    #It runs nsub+1 times.
+    for level in range(nsub):
         s, w = zloc_init_ellipse(T, W, nsub, level, npan)
         K = MAinit_ellipse(s, w, aspect)
         #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2

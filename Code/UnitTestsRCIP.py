@@ -22,9 +22,6 @@ class TestNaiveMethod(unittest.TestCase):
 
         self.assertTrue(np.sum(awzp * w_fine) == 2*np.pi)
 
-
-
-
     def test_verify_rho_fine(self):
         #FINE DENSITY COMPUTATION 
         nsub = 2
@@ -45,7 +42,23 @@ class TestNaiveMethod(unittest.TestCase):
         
         param, weights, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
         true_density = get_density_true(param, weights, aspect)
-        print(true_density-density_fine)
+        print("RHO Fine difference:", np.abs(np.max(true_density-density_fine)))
+
+        npoin = s.shape[0]
+        target = np.array([0,0.2])
+        z_list = np.empty((npoin,2))
+        z_list[:,0] = z.real
+        z_list[:,1] = z.imag
+
+        f_list = f(z_list,target)
+
+        awzp = w_fine * np.abs(zpfunc_ellipse(s, aspect))
+        pot_at_target = np.sum(f_list*density_fine*awzp)
+        print(pot_at_target)
+
+
+
+
 
     def test_eq_7_RCIP_LONG(self):
         #FINE DENSITY COMPUTATION 
@@ -205,6 +218,8 @@ class TestNaiveMethod(unittest.TestCase):
         
         R_true = get_R_true(npan, nsub, aspect)
 
+        print("RCOMP test:", np.max(np.abs(R-R_true)))
+
         #plt.title("Difference Between R/R_true")
         #plt.imshow(np.log(np.abs(R-R_true)+1e-15))
         #plt.colorbar()
@@ -324,13 +339,13 @@ class TestNaiveMethod(unittest.TestCase):
         K_circ_coarse = get_K_circ_coarse(npan, aspect)
         P = get_P(npan, nsub)
         PW = get_PW(npan, nsub)
-        """ print(np.max(K_circ_fine - P@K_circ_coarse@PW.T)) """
+        print("EQ16",np.max(K_circ_fine - P@K_circ_coarse@PW.T))
 
     def test_PW_P(self):
         npan = 10
         PW = get_PW(npan,2)
         P = get_P(npan,2)
-        """ print(np.max(PW.T @ P - np.eye(16*npan))) """
+        print("PW_P test", np.max(PW.T @ P - np.eye(16*npan)))
 
     def test_get_PW(self):
         PW = get_PW(10,2)
