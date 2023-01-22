@@ -226,7 +226,7 @@ def MAinit_ellipse(parametrization, weights, aspect):
     for i in range(npoin):
         D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
 
-    W_shape = np.diag(weights) * np.abs(zpfunc_ellipse(parametrization, aspect))
+    W_shape = np.diag(np.abs(zpfunc_ellipse(parametrization, aspect))[0])
 
     D_KW = D_K @ W_shape
 
