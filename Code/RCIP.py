@@ -281,7 +281,7 @@ def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
     return R
 
 def f(s, target):
-    return (-1/(2*np.pi)) * np.log(np.linalg.norm(s - target,2,axis=1))
+    return (-1/(2*np.pi)) * np.log(np.linalg.norm(s-target, axis=1))
 
 
 

@@ -7,15 +7,15 @@ import unittest
 class TestNaiveMethod(unittest.TestCase):
 
     def test_f(self):
-        s = np.array([[1,0], [1,0]])
-        target = np.array([2, 0])
-
+        s = np.array([[1,0], [1,0],[1,0]])
+        target = np.array([[2, 0]])
+        print(s.shape)
         print("F:", f(s, target))
 
 
 
     def test_check_give_fine_mesh(self):
-        nsub = 2
+        nsub = 1
         npan = 10
         aspect = 1
         s, w_fine, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
@@ -28,7 +28,7 @@ class TestNaiveMethod(unittest.TestCase):
 
     def test_verify_rho_fine(self):
         #FINE DENSITY COMPUTATION 
-        nsub = 2
+        nsub = 1
         npan = 10
         aspect = 3
 
@@ -48,8 +48,11 @@ class TestNaiveMethod(unittest.TestCase):
         true_density = get_density_true(param, weights, aspect)
         print("RHO Fine difference:", np.abs(np.max(true_density-density_fine)))
 
+        print("True Density", true_density)
+        print("Fine Density Shape:", true_density.shape)
+
         npoin = s.shape[0]
-        target = np.array([0,0.2])
+        target = np.array([[0,0.2]])
         z_list = np.empty((npoin,2))
         z_list[:,0] = z.real
         z_list[:,1] = z.imag
@@ -58,7 +61,7 @@ class TestNaiveMethod(unittest.TestCase):
 
         awzp = w_fine * np.abs(zpfunc_ellipse(s, aspect))
         pot_at_target = np.sum(f_list*density_fine*awzp)
-        print(pot_at_target)
+        print("Pot at target:", pot_at_target)
 
 
 
@@ -81,7 +84,7 @@ class TestNaiveMethod(unittest.TestCase):
         LHS_fine = np.eye(K_fine.shape[0]) + K_fine
         density_fine = gmres(LHS_fine, RHS_fine)[0]
 
-        target = np.array([0,0.2])
+        target = np.array([[0,0.2]])
 
         z_list = np.empty((K_fine.shape[0],2))
         z_list[:,0] = z.real

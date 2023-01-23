@@ -247,7 +247,7 @@ def get_error(npan, test_charge, target_complex):
 def main():
     #Defining Number of Panels
     #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
-    npan = 50
+    npan = 10
     #print("Number of Panels: ", npan)
     npoin = npan*16
 
@@ -289,7 +289,8 @@ def main():
     #assert(np.max(np.abs(RHS-get_bc_conditions([test_charge], complex_positions)))<=1e-6)
    
     density = gmres(LHS, RHS)[0]
-    print(density)
+    print("Coarse Naive Density:", density)
+    print("Coarse Naive Shape:", density.shape)
     target_complex= 0+ complex(0,1)*0.2
     out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W_shape @ density   
     print("Result:", out)
