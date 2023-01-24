@@ -1,4 +1,5 @@
 from RCIP import *
+
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
@@ -6,13 +7,30 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_true_f(self):
+        """ nsub = 1
+        npan = 10
+        aspect = 1
+        s, w_fine, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
+        npoin = s.shape[0]
+        curve_nodes = ellipse(s, stretch=aspect)
+        curve_nodes = curve_nodes.reshape(2,-1)
+        curve_normal = np.array(ellipse_normal(s, aspect, npoin))
+        complex_positions = [complex(curve_nodes[0][i],curve_nodes[1][i]) for i in range(npoin)]
+        complex_positions = np.array(complex_positions)
+        target_complex= 0+ complex(0,1)*0.2
+        f_true = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) """
+
+
+
+
+
+
     def test_f(self):
-        s = np.array([[1,0], [1,0],[1,0]])
+        s = np.array([0.1,])
         target = np.array([[2, 0]])
         print(s.shape)
         print("F:", f(s, target))
-
-
 
     def test_check_give_fine_mesh(self):
         nsub = 1
@@ -48,20 +66,21 @@ class TestNaiveMethod(unittest.TestCase):
         true_density = get_density_true(param, weights, aspect)
         print("RHO Fine difference:", np.abs(np.max(true_density-density_fine)))
 
-        print("True Density", true_density)
-        print("Fine Density Shape:", true_density.shape)
+        #print("True Density", true_density)
+        #print("Fine Density Shape:", true_density.shape)
 
         npoin = s.shape[0]
         target = np.array([[0,0.2]])
-        z_list = np.empty((npoin,2))
-        z_list[:,0] = z.real
-        z_list[:,1] = z.imag
+        
 
-        f_list = f(z_list,target)
+        f_list = compute_f_true(nsub, npan, aspect)
 
         awzp = w_fine * np.abs(zpfunc_ellipse(s, aspect))
         pot_at_target = np.sum(f_list*density_fine*awzp)
         print("Pot at target:", pot_at_target)
+
+
+
 
 
 
@@ -86,15 +105,14 @@ class TestNaiveMethod(unittest.TestCase):
 
         target = np.array([[0,0.2]])
 
-        z_list = np.empty((K_fine.shape[0],2))
-        z_list[:,0] = z.real
-        z_list[:,1] = z.imag
-        f_fine = f(z_list, target)
+        
+        f_list = compute_f_true(nsub, npan, aspect)
 
-        #print(f_fine)
+
 
         # YOU REALLY NEED TO WRITE A UNIT TEST VERIFYING DENSITY_FINE!!!
-        #print(np.sum(density_fine * w_fine))
+        #awzp = w_fine * np.abs(zpfunc_ellipse(s, aspect))
+        #print(np.sum(density_fine * awzp * f_list))
 
     def test_eq_15(self):
 

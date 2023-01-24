@@ -9,10 +9,19 @@ import warnings
 from Naive import get_bc_conditions
 from Naive import sympy_kernel, test_curve_weights
 from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal
-
+from Naive import compute_double_layer_off_boundary
 n = 16
 T, W, _ = sps.legendre(n).weights.T
 
+def compute_f_true(s,target_complex, aspect):
+    npoin = s.shape[0]
+    curve_nodes = ellipse(s, stretch=aspect)
+    curve_nodes = curve_nodes.reshape(2,-1)
+    curve_normal = np.array(ellipse_normal(s, aspect, npoin))
+    complex_positions = [complex(curve_nodes[0][i],curve_nodes[1][i]) for i in range(npoin)]
+    complex_positions = np.array(complex_positions)
+    f_true = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin)
+    return f_true
 
 def get_density_true(parametrization, weights, aspect):
     npoin = parametrization.shape[0]
@@ -283,6 +292,10 @@ def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
 def f(s, target):
     return (-1/(2*np.pi)) * np.log(np.linalg.norm(s-target, axis=1))
 
+#def f(s, target, aspect):
+#    sympy_kern = sympy_kernel(aspect)
+#    return sympy_kern.kernel_evaluate(s,target)
+
 
 
 def get_param_T(end1, end2):
@@ -520,6 +533,7 @@ def main_ellipse():
     RHS = 2*get_bc_conditions([test_charge], z)
 
     target = np.array([0,0.2])
+    target_complex= 0+ complex(0,1)*0.2
 
     density = gmres(LHS, RHS)[0]
     #print(LHS, RHS)
@@ -529,7 +543,7 @@ def main_ellipse():
     z_list[:,0] = z.real
     z_list[:,1] = z.imag
 
-    f_list = f(z_list,target)
+    f_list = compute_f_true(s, target_complex, aspect)
 
     awzp = w * np.abs(zpfunc_ellipse(s, aspect))
 

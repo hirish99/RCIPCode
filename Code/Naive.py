@@ -289,8 +289,8 @@ def main():
     #assert(np.max(np.abs(RHS-get_bc_conditions([test_charge], complex_positions)))<=1e-6)
    
     density = gmres(LHS, RHS)[0]
-    print("Coarse Naive Density:", density)
-    print("Coarse Naive Shape:", density.shape)
+    #print("Coarse Naive Density:", density)
+    #print("Coarse Naive Shape:", density.shape)
     target_complex= 0+ complex(0,1)*0.2
     out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W_shape @ density   
     print("Result:", out)
