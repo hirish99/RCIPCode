@@ -193,7 +193,7 @@ def zloc_init_ellipse(T, W, nsub, level, npan):
     #different from the paper where level goes from 1,nsub
     #note that nsub represents a type b mesh on \tau^*!!!
     #
-    denom = 2**(nsub-(level+1)) * npan
+    denom = 2**(nsub-(level)) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
     s_new = np.append(list(reversed(1-s_new)),s_new)
     w = np.append(np.append(W/4, W/4), W/2)/denom
@@ -234,6 +234,7 @@ def MAinit_ellipse(parametrization, weights, aspect):
         D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
     for i in range(npoin):
         D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
+
 
     W_shape = np.diag(weights * np.abs(zpfunc_ellipse(parametrization, aspect))[0])
 
@@ -477,8 +478,8 @@ def main_ellipse():
     aspect = 3
 
     #Number of panels = 10
-    npan = 12
-    nsub = 3
+    npan = 3
+    nsub = 1
 
     s, w = zinit_ellipse(T,  W, npan)
     z = zfunc_ellipse(s, aspect)
