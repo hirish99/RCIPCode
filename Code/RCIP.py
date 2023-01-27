@@ -9,7 +9,7 @@ import warnings
 from Naive import get_bc_conditions
 from Naive import sympy_kernel, test_curve_weights
 from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal
-from Naive import compute_double_layer_off_boundary
+from Naive import compute_double_layer_off_boundary, get_naive_potential
 n = 16
 T, W, _ = sps.legendre(n).weights.T
 
@@ -477,7 +477,7 @@ def main_ellipse():
     aspect = 3
 
     #Number of panels = 10
-    npan = 10
+    npan = 12
     nsub = 3
 
     s, w = zinit_ellipse(T,  W, npan)
@@ -529,10 +529,10 @@ def main_ellipse():
     LHS = I_coa + (Kcirc@R)
     #pot_boundary = np.loadtxt('bc_potential.np')
     
-    test_charge = np.array([-2,2])
+    test_charge = np.array([-3,2])
     RHS = 2*get_bc_conditions([test_charge], z)
 
-    target = np.array([0,0.2])
+    target = np.array([1,0.2])
     target_complex= 0+ complex(0,1)*0.2
 
     density = gmres(LHS, RHS)[0]
@@ -550,6 +550,13 @@ def main_ellipse():
     pot_at_target = np.sum(f_list*density_hat*awzp)
 
     print(pot_at_target)
+
+    npan_naive = 4
+    out, true = get_naive_potential(npan_naive, test_charge, target_complex)
+
+    print("RCIP Computation Error:", np.abs(pot_at_target - true))
+    print("Naive Computation Error:", np.abs((out - true)))
+
 
 
 """ 
