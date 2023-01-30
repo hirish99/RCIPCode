@@ -225,6 +225,23 @@ def MAinit_ellipse_check(parametrization, weights, aspect):
 
     return D_KW, D_K, W_shape
 
+
+def MAinit_ellipse_cancellation(parametrization, aspect):
+    sympy_kern = sympy_kernel(aspect)
+    npoin = parametrization.shape[0]
+    D_K = np.zeros((npoin, npoin))
+    min_vals = []
+    for i in range(npoin):
+        D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
+        c = sympy_kern.cancel_evaluate(parametrization[i],parametrization)[0][0]
+        c = np.abs(np.nan_to_num(c, nan=1))
+        c[i] = 1
+        min_vals.append(np.min(c))
+    for i in range(npoin):
+        D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
+
+    return np.min(np.array(min_vals))
+
 def MAinit_ellipse(parametrization, weights, aspect):
 
     sympy_kern = sympy_kernel(aspect)
@@ -234,7 +251,6 @@ def MAinit_ellipse(parametrization, weights, aspect):
         D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
     for i in range(npoin):
         D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
-
 
     W_shape = np.diag(weights * np.abs(zpfunc_ellipse(parametrization, aspect))[0])
 
@@ -267,7 +283,7 @@ def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
     R = None
     #This I don't particularily believe. Nvm.
     #It runs nsub+1 times.
-    for level in range(nsub):
+    for level in range(0,nsub+1):
         s, w = zloc_init_ellipse(T, W, nsub, level, npan)
         K = MAinit_ellipse(s, w, aspect)
         #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
@@ -470,16 +486,14 @@ def get_R_true(npan, nsub, aspect):
 
 
 
-
-
 def main_ellipse():
     IP, IPW = IPinit(T,  W)
 
     aspect = 3
 
     #Number of panels = 10
-    npan = 3
-    nsub = 1
+    npan = 13
+    nsub = 4
 
     s, w = zinit_ellipse(T,  W, npan)
     z = zfunc_ellipse(s, aspect)
@@ -534,7 +548,7 @@ def main_ellipse():
     RHS = 2*get_bc_conditions([test_charge], z)
 
     target = np.array([1,0.2])
-    target_complex= 0+ complex(0,1)*0.2
+    target_complex= 2+ complex(0,1)*0.2
 
     density = gmres(LHS, RHS)[0]
     #print(LHS, RHS)
@@ -550,13 +564,18 @@ def main_ellipse():
 
     pot_at_target = np.sum(f_list*density_hat*awzp)
 
-    print(pot_at_target)
+    #print(pot_at_target)
 
-    npan_naive = 4
+    npan_naive = 11
     out, true = get_naive_potential(npan_naive, test_charge, target_complex)
 
     print("RCIP Computation Error:", np.abs(pot_at_target - true))
     print("Naive Computation Error:", np.abs((out - true)))
+    plt.scatter(z.real, z.imag)
+    plt.scatter(target_complex.real, target_complex.imag)
+    plt.scatter(test_charge[0], test_charge[1])
+    plt.show()
+
 
 
 

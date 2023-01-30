@@ -7,6 +7,16 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def get_cancelation(self, npan, nsub, aspect):
+        s,w,k=give_fine_mesh_parametrization_ellipse(nsub, npan)
+        return MAinit_ellipse_cancellation(s, aspect)
+
+    def test_cancellation_error(self):
+        errors = []
+        for i in range(4,40,4):
+            errors.append(self.get_cancelation(i,2,3))
+        print("Cancelation Errors:", errors)
+
     def test_true_f(self):
         """ nsub = 1
         npan = 10
@@ -26,11 +36,6 @@ class TestNaiveMethod(unittest.TestCase):
 
 
 
-    def test_f(self):
-        s = np.array([0.1,])
-        target = np.array([[2, 0]])
-        print(s.shape)
-        print("F:", f(s, target))
 
     def test_check_give_fine_mesh(self):
         nsub = 1
@@ -69,15 +74,16 @@ class TestNaiveMethod(unittest.TestCase):
         #print("True Density", true_density)
         #print("Fine Density Shape:", true_density.shape)
 
+
         npoin = s.shape[0]
         target = np.array([[0,0.2]])
         
 
-        f_list = compute_f_true(nsub, npan, aspect)
+        """ f_list = compute_f_true(nsub, npan, aspect)
 
         awzp = w_fine * np.abs(zpfunc_ellipse(s, aspect))
         pot_at_target = np.sum(f_list*density_fine*awzp)
-        print("Pot at target:", pot_at_target)
+        print("Pot at target:", pot_at_target) """
 
 
 
@@ -103,10 +109,13 @@ class TestNaiveMethod(unittest.TestCase):
         LHS_fine = np.eye(K_fine.shape[0]) + K_fine
         density_fine = gmres(LHS_fine, RHS_fine)[0]
 
+
+
+
         target = np.array([[0,0.2]])
 
         
-        f_list = compute_f_true(nsub, npan, aspect)
+        #f_list = compute_f_true(nsub, npan, aspect)
 
 
 
