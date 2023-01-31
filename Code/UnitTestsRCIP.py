@@ -7,6 +7,45 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def f_param(self, param,  z_in):
+        return np.abs(param)**2 * np.abs(z_in)
+
+    def test_accuracy_of_prolongation_test(self):
+        npan = 11
+        nsub = 4
+        aspect = 3
+
+        P = get_P(npan, nsub)
+
+        param_fine, w_fine, kcirc_indices = give_fine_mesh_parametrization_ellipse(nsub, npan)
+        z_fine = zfunc_ellipse(param_fine, aspect)
+        z_fine = z_fine[0]
+        f_fine = self.f_param(param_fine, z_fine)
+
+        s_coarse, w_coarse = zinit_ellipse(T,  W, npan)
+        z_coarse = zfunc_ellipse(s_coarse, aspect)
+        z_coarse = z_coarse[0]
+        f_coarse = self.f_param(s_coarse, z_coarse)
+
+        #print("Fine Param Shape:", param_fine.shape)
+        #print("Fine Weights Shape:", w_fine.shape)
+
+        #print("Coarse Param Shape:", s_coarse.shape)
+        #print("Coarse Weights Shape:", w_coarse.shape)
+        
+        #print("Prolongation Operator Shape:", P.shape)
+        
+        print("Difference of Prolongation:",np.linalg.norm(f_fine - P @ f_coarse, 2))
+
+
+
+
+
+
+
+
+        
+
     def get_cancelation(self, npan, nsub, aspect):
         s,w,k=give_fine_mesh_parametrization_ellipse(nsub, npan)
         return MAinit_ellipse_cancellation(s, aspect)
