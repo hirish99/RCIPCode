@@ -10,6 +10,66 @@ import warnings
 n = 16
 lege_nodes, lege_weights, _ = sps.legendre(n).weights.T
 
+def MAinit(z,zp,zpp,nz,w,wzp,npoin):
+    import warnings
+    warnings.filterwarnings("ignore", message="divide by zero encountered in divide")
+
+    N = npoin
+    M1 = np.zeros((N,N))
+    ##Note that the formula for the Kernel is straightforward.
+    for m in range(N):
+        M1[:,m] = np.abs(wzp[m]) * (nz/(z[m]-z)).real
+
+    for m in range(N):
+        M1[m,m] = (-w*(zpp/zp).imag/2)[m]
+
+    warnings.filterwarnings("default", message="divide by zero encountered in divide")
+    
+    retMe = (M1/np.pi)
+
+    return retMe
+
+def complex_exp(theta):
+    return np.cos(theta)+complex(0,1)*np.sin(theta)
+#Give the parametrization of the curve from 0 to 1 here.
+def zfunc(s,theta):
+    return np.sin(np.pi * s) * complex_exp(theta*(s-0.5))
+def zpfunc(s, theta):
+    return np.pi * np.cos(np.pi * s)*complex_exp(theta*(s-0.5)) + complex(0,1)*theta*np.sin(np.pi*s)*complex_exp(theta*(s-0.5))
+def zppfunc(s, theta):
+    part1 = np.pi *(-np.pi)* np.sin(np.pi * s)*complex_exp(theta*(s-0.5))
+    part2 = np.pi * np.cos(np.pi * s)*complex(0,1)*theta*complex_exp(theta*(s-0.5))
+    part3 = complex(0,1)*theta*np.pi*np.cos(np.pi*s)*complex_exp(theta*(s-0.5))
+    part4 = complex(0,1)*theta*np.sin(np.pi*s)*complex(0,1)*theta*complex_exp(theta*(s-0.5))
+    
+    return part1+part2+part3+part4
+
+def zinit(theta,sinter,sinterdiff,T,W,npan):
+    npoin = 16*npan #np is the number of points used for discretization in total
+    s = np.zeros(npoin)
+    w = np.zeros(npoin)
+
+    for k in range(npan):
+        start_in = k*16
+        end_in = (k+1)*16
+        #print(start_in, end_in)
+        sdif = sinterdiff[k]/2
+        #essentially s represents the parametrization from 0 to 1
+        #We divide the values in T by 2 get a range -0.5 to 0.5
+        #Then center it at the midpoint of each interval. Simple.
+        s[start_in:end_in] = (sinter[k]+sinter[k+1])/2 + sdif*T
+        #The weights are correspondingly scaled/2 since we are are transforming
+        #from -1,1 to x,x+sinter
+        w[start_in:end_in] = W*sdif
+
+    z = zfunc(s, theta)
+    zp = zpfunc(s, theta)
+    zpp = zppfunc(s, theta)
+    nz = -complex(0,1)*zp/np.abs(zp)
+    wzp = w*zp
+    
+    return z, zp, zpp,nz,w,wzp, npoin
+
 class sympy_kernel:
     def __init__(self, aspect):
         import warnings
@@ -293,6 +353,42 @@ def get_error(npan, test_charge, target_complex):
 
 
 
+def main_teardrop():
+    #Defining Number of Panels
+    #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
+    theta = np.pi/2
+    lamda = 1
+
+    #Number of panels = 10
+    npan = 10
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+    test_charge = np.array([-2,2])
+
+    z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, lege_nodes, lege_weights, npan)
+    complex_positions = z
+    curve_normal = nz
+    target_complex= 0+ complex(0,1)*0.2
+
+    W_shape = np.diag(np.abs(wzp))
+    D_K = MAinit(z,zp,zpp,nz,w,wzp,npoin)
+
+    D_KW = D_K @ W_shape
+    LHS = 0.5*np.eye(npoin) + D_KW
+    RHS = 2*get_bc_conditions([test_charge], z)
+
+    target = np.array([-1,0.3])
+    density = gmres(LHS, RHS)[0]
+
+    out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W_shape @ density   
+
+    print(out)
+
+
+
+
+
+
 def main():
     #Defining Number of Panels
     #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
@@ -349,7 +445,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    #main()
+    main_teardrop()
 
 
 

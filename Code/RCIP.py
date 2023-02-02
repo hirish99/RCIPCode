@@ -544,11 +544,11 @@ def main_ellipse():
     LHS = I_coa + (Kcirc@R)
     #pot_boundary = np.loadtxt('bc_potential.np')
     
-    test_charge = np.array([-3,2])
+    test_charge = np.array([-40,2])
     RHS = 2*get_bc_conditions([test_charge], z)
 
-    target = np.array([1,0.2])
-    target_complex= 2+ complex(0,1)*0.2
+    #target = np.array([1,0.2])
+    target_complex= 5+ complex(0,1)*0.6
 
     density = gmres(LHS, RHS)[0]
     #print(LHS, RHS)
