@@ -260,7 +260,6 @@ def compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, np
                 K[i, j] = K_eval(nu_p, r, r_p)
     return K
 
-
 def compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin):
     OUT = np.empty(npoin)
     for j in range(npoin):
@@ -358,7 +357,7 @@ def main_teardrop():
     theta = np.pi/2
 
     #Number of panels = 10
-    npan = 10
+    npan = 20
     sinter = np.linspace(0, 1, npan+1)
     sinterdiff = np.ones(npan)/npan
     test_charge = np.array([-2,2])

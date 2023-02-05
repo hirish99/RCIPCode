@@ -303,7 +303,7 @@ def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
 
 def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
     R = None
-    for level in range(0, nsub+1):
+    for level in range(0, nsub):
         z,zp,zpp,nz,w,wzp = zloc_init(theta,T,W,nsub,level,npan)
         K = MAinit(z,zp,zpp,nz,w,wzp,96)
         MAT = np.eye(96) + lamda*K
@@ -477,22 +477,6 @@ def get_R_true(npan, nsub, aspect):
 
 
 
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
 def main_ellipse():
     IP, IPW = IPinit(T,  W)
 
@@ -584,9 +568,6 @@ def main_ellipse():
     plt.show()
 
 
-
-
-
 def main():
     IP, IPW = IPinit(T,  W)
 
@@ -594,10 +575,10 @@ def main():
     lamda = 1
 
     #Number of panels = 10
-    npan = 10
+    npan = 50
     sinter = np.linspace(0, 1, npan+1)
     sinterdiff = np.ones(npan)/npan
-    nsub = 6
+    nsub = 3
 
     test_charge = np.array([-2,2])
     target_complex= 0+ complex(0,1)*0.4

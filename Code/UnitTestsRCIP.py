@@ -6,6 +6,14 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
+    def test_compute_f_teardrop(self):
+        z = np.array([complex(0,0)])
+        nz = np.array([complex(0,1)])
+        target_complex = np.array([complex(0,1)])
+        f_out = compute_double_layer_off_boundary(z, nz, target_complex, 1)
+
+        self.assertTrue(np.abs(f_out-1/(2*np.pi)) <= 1e-8)
+
 
     def f_param(self, param,  z_in):
         return np.abs(param)**2 * np.abs(z_in)
@@ -123,9 +131,6 @@ class TestNaiveMethod(unittest.TestCase):
         awzp = w_fine * np.abs(zpfunc_ellipse(s, aspect))
         pot_at_target = np.sum(f_list*density_fine*awzp)
         print("Pot at target:", pot_at_target) """
-
-
-
 
 
 
