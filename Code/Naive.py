@@ -12,7 +12,7 @@ lege_nodes, lege_weights, _ = sps.legendre(n).weights.T
 
 def MAinit(z,zp,zpp,nz,w,wzp,npoin):
     import warnings
-    warnings.filterwarnings("ignore", message="divide by zero encountered in divide")
+    warnings.filterwarnings("ignore")
 
     N = npoin
     M1 = np.zeros((N,N))
@@ -23,7 +23,6 @@ def MAinit(z,zp,zpp,nz,w,wzp,npoin):
     for m in range(N):
         M1[m,m] = (-w*(zpp/zp).imag/2)[m]
 
-    warnings.filterwarnings("default", message="divide by zero encountered in divide")
     
     retMe = (M1/np.pi)
 
@@ -357,18 +356,18 @@ def main_teardrop():
     #Defining Number of Panels
     #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
     theta = np.pi/2
-    lamda = 1
 
     #Number of panels = 10
     npan = 10
     sinter = np.linspace(0, 1, npan+1)
     sinterdiff = np.ones(npan)/npan
     test_charge = np.array([-2,2])
+    target_complex= 0+ complex(0,1)*0.4
 
     z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, lege_nodes, lege_weights, npan)
     complex_positions = z
     curve_normal = nz
-    target_complex= 0+ complex(0,1)*0.2
+
 
     W_shape = np.diag(np.abs(wzp))
     D_K = MAinit(z,zp,zpp,nz,w,wzp,npoin)
@@ -377,12 +376,11 @@ def main_teardrop():
     LHS = 0.5*np.eye(npoin) + D_KW
     RHS = 2*get_bc_conditions([test_charge], z)
 
-    target = np.array([-1,0.3])
     density = gmres(LHS, RHS)[0]
 
     out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W_shape @ density   
 
-    print(out)
+    print("OUT:", out)
 
 
 

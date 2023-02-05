@@ -23,6 +23,13 @@ def compute_f_true(s,target_complex, aspect):
     f_true = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin)
     return f_true
 
+def compute_f_true_teardrop(z, nz, target_complex):
+    complex_positions = z
+    curve_normal = nz
+    npoin = z.shape[0]
+    f_true = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin)
+    return f_true
+
 def get_density_true(parametrization, weights, aspect):
     npoin = parametrization.shape[0]
     complex_positions = zfunc_ellipse(parametrization, aspect)
@@ -296,7 +303,7 @@ def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
 
 def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
     R = None
-    for level in range(0, nsub):
+    for level in range(0, nsub+1):
         z,zp,zpp,nz,w,wzp = zloc_init(theta,T,W,nsub,level,npan)
         K = MAinit(z,zp,zpp,nz,w,wzp,96)
         MAT = np.eye(96) + lamda*K
@@ -579,7 +586,7 @@ def main_ellipse():
 
 
 
-""" 
+
 def main():
     IP, IPW = IPinit(T,  W)
 
@@ -591,6 +598,10 @@ def main():
     sinter = np.linspace(0, 1, npan+1)
     sinterdiff = np.ones(npan)/npan
     nsub = 6
+
+    test_charge = np.array([-2,2])
+    target_complex= 0+ complex(0,1)*0.4
+    target = np.array([target_complex.real, target_complex.imag])
 
     z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
 
@@ -622,11 +633,7 @@ def main():
     I_coa = np.eye(npoin)
     LHS = I_coa +lamda*(Kcirc@R)
     #pot_boundary = np.loadtxt('bc_potential.np')
-    test_charge = np.array([-2,2])
-    print(z)
     RHS = 2*get_bc_conditions([test_charge], z)
-
-    target = np.array([-1,0.3])
 
     density = gmres(LHS, RHS)[0]
     #print(LHS, RHS)
@@ -636,15 +643,13 @@ def main():
     z_list[:,0] = z.real
     z_list[:,1] = z.imag
 
-    f_list = f(z_list,target)
     awzp = np.abs(wzp)
 
+    f_list = compute_f_true_teardrop(z, nz, target_complex)
     pot_at_target = np.sum(f_list*density_hat*awzp)
 
-    print(pot_at_target) """
-
-
-
+    print(pot_at_target) 
 
 if __name__ == '__main__':
-    main_ellipse()
+    #main_ellipse()
+    main()
