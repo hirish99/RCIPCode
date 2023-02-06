@@ -180,7 +180,7 @@ def zinit_ellipse(T,W,npan):
     return s, w
 
 def zloc_init(theta, T, W, nsub, level, npan):
-    denom = 2**(nsub-level) * npan
+    denom = 2**(nsub-(level+1)) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
     s_new = np.append(list(reversed(1-s_new)),s_new)
     w = np.append(np.append(W/4, W/4), W/2)/denom
@@ -483,8 +483,8 @@ def main_ellipse():
     aspect = 3
 
     #Number of panels = 10
-    npan = 13
-    nsub = 4
+    npan = 10
+    nsub = 2
 
     s, w = zinit_ellipse(T,  W, npan)
     z = zfunc_ellipse(s, aspect)
@@ -568,21 +568,21 @@ def main_ellipse():
     plt.show()
 
 
-def main():
+def main_teardrop1():
     IP, IPW = IPinit(T,  W)
 
     theta = np.pi/2
     lamda = 1
 
     #Number of panels = 10
-    npan = 50
+    npan = 10
     sinter = np.linspace(0, 1, npan+1)
     sinterdiff = np.ones(npan)/npan
-    nsub = 3
+    nsub = 2
 
     test_charge = np.array([-2,2])
     target_complex= 0+ complex(0,1)*0.4
-    target = np.array([target_complex.real, target_complex.imag])
+    #target = np.array([target_complex.real, target_complex.imag])
 
     z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
 
@@ -633,4 +633,4 @@ def main():
 
 if __name__ == '__main__':
     #main_ellipse()
-    main()
+    main_teardrop1()
