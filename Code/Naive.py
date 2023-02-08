@@ -170,6 +170,19 @@ def ellipse(t, stretch=3):
         np.sin(2*np.pi*t),
         ])
 
+def teardrop(t, theta = np.pi/2):
+    complex_pos = zfunc(t, theta)
+    return np.array([
+        complex_pos.real, complex_pos.imag
+    ])
+
+def teardrop_normal(t, theta = np.pi/2):
+    ctan = zpfunc(t, theta)
+    cnormal = -complex(0,1)*ctan/np.abs(ctan)
+    return np.array([
+        cnormal.real, cnormal.imag
+    ])
+
 def ellipse_normal(t, stretch, npoin):
     tan = np.array([
         -stretch*2*np.pi*np.sin(2*np.pi*t),
@@ -351,39 +364,43 @@ def get_error(npan, test_charge, target_complex):
 
 
 
-def main_teardrop():
+""" def main_teardrop():
     #Defining Number of Panels
     #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
     theta = np.pi/2
 
     #Number of panels = 10
-    npan = 20
+    npan = 10
     sinter = np.linspace(0, 1, npan+1)
     sinterdiff = np.ones(npan)/npan
-    test_charge = np.array([-2,2])
-    target_complex= 0+ complex(0,1)*0.4
+    test_charge = np.array([0,0.4])
+    target_complex= 0.5 + complex(0,1)*0.05
 
     z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, lege_nodes, lege_weights, npan)
     complex_positions = z
     curve_normal = nz
 
+    plt.scatter(z.real,z.imag)
+    plt.scatter(test_charge[0],test_charge[1])
+    plt.scatter(target_complex.real, target_complex.imag)
+    plt.show()
 
     W_shape = np.diag(np.abs(wzp))
     D_K = MAinit(z,zp,zpp,nz,w,wzp,npoin)
 
-    D_KW = D_K @ W_shape
-    LHS = 0.5*np.eye(npoin) + D_KW
+    D_KW = D_K 
+    LHS = 0.5*np.eye(npoin) + D_KW @ W_shape
     RHS = 2*get_bc_conditions([test_charge], z)
 
     density = gmres(LHS, RHS)[0]
 
+    print(LHS)
+
     out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W_shape @ density   
 
     print("OUT:", out)
-
-
-
-
+    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
+    print("True:", true) """
 
 
 def main():
@@ -442,8 +459,7 @@ def main():
 
 
 if __name__ == '__main__':
-    #main()
-    main_teardrop()
+    main()
 
 
 

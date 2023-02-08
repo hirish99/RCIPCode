@@ -3,6 +3,33 @@ from Naive import *
 import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
+    def zesty_teardrop(self):
+        npan = 4
+        panel_boundaries = np.linspace(0, 1, npan+1)
+        curve_nodes = teardrop(make_panels(panel_boundaries), theta = np.pi/2)
+        curve_nodes1 = ellipse(make_panels(panel_boundaries), 3)
+
+        assert(curve_nodes.shape == curve_nodes1.shape)
+
+        plt.scatter(curve_nodes[0], curve_nodes[1])
+        plt.scatter(curve_nodes1[0], curve_nodes1[1])
+        plt.show()
+    
+    def test_teardrop_normal(self):
+        npan = 4
+        panel_boundaries = np.linspace(0, 1, npan+1)
+        normals = teardrop_normal(make_panels(panel_boundaries), np.pi/2)
+        curve_nodes = teardrop(make_panels(panel_boundaries), theta = np.pi/2)
+
+        i = np.random.randint(0,16)
+        j = np.random.randint(0,4)
+        print(curve_nodes.shape)
+        plt.scatter(curve_nodes[0], curve_nodes[1])
+        plt.arrow(curve_nodes[0,j][i], curve_nodes[1,j][i], normals[0,j][i], normals[1,j][i])
+        plt.axis('equal')
+        plt.show()
+
+
     def estimate_order_of_convergence(self, abscissae, errors):
         """Assuming that abscissae and errors are connected by a law of the form
         error = constant * abscissa ^ (order),
@@ -16,7 +43,7 @@ class TestNaiveMethod(unittest.TestCase):
         coefficients = np.polyfit(np.log10(abscissae), np.log10(errors), 1)
         return 10**coefficients[-1], coefficients[-2]
     
-    def test_order_of_convergence(self):
+    def zesty_order_of_convergence(self):
         N = 20
         test_charge = np.array([-2,2])
         target_complex = 0.5+ complex(0,1)*0

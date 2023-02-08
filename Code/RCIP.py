@@ -301,12 +301,12 @@ def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
     return R
 
-def Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
+def Rcomp(theta,T,W,Pbc,PWbc,nsub,npan):
     R = None
     for level in range(0, nsub):
         z,zp,zpp,nz,w,wzp = zloc_init(theta,T,W,nsub,level,npan)
         K = MAinit(z,zp,zpp,nz,w,wzp,96)
-        MAT = np.eye(96) + lamda*K
+        MAT = np.eye(96) + K
         if level == 0:
             R = np.linalg.inv(MAT[16:80,16:80])
         MAT[16:80,16:80] = np.linalg.inv(R)
@@ -484,7 +484,7 @@ def main_ellipse():
 
     #Number of panels = 10
     npan = 10
-    nsub = 2
+    nsub = 1
 
     s, w = zinit_ellipse(T,  W, npan)
     z = zfunc_ellipse(s, aspect)
@@ -530,20 +530,25 @@ def main_ellipse():
     #R = get_R_true(npan, nsub, aspect)
 
 
+
     I_coa = np.eye(npoin)
 
     LHS = I_coa + (Kcirc@R)
     #pot_boundary = np.loadtxt('bc_potential.np')
     
-    test_charge = np.array([-40,2])
+    test_charge = np.array([-2,2])
     RHS = 2*get_bc_conditions([test_charge], z)
 
     #target = np.array([1,0.2])
-    target_complex= 5+ complex(0,1)*0.6
+    target_complex= 1+ complex(0,1)*0.6
 
     density = gmres(LHS, RHS)[0]
     #print(LHS, RHS)
     density_hat = R @ density
+
+    print("LHS:", np.mean(LHS))
+    print("Kcirc:", np.mean(Kcirc))
+    print("R:", np.mean(R))
 
     z_list = np.empty((npoin,2))
     z_list[:,0] = z.real
@@ -568,20 +573,19 @@ def main_ellipse():
     plt.show()
 
 
-def main_teardrop1():
+""" def main_teardrop1():
     IP, IPW = IPinit(T,  W)
 
     theta = np.pi/2
-    lamda = 1
 
     #Number of panels = 10
-    npan = 10
+    npan = 70
     sinter = np.linspace(0, 1, npan+1)
     sinterdiff = np.ones(npan)/npan
-    nsub = 2
+    nsub = 6
 
-    test_charge = np.array([-2,2])
-    target_complex= 0+ complex(0,1)*0.4
+    test_charge = np.array([0,0.4])
+    target_complex= 0.5 + complex(0,1)*0.05
     #target = np.array([target_complex.real, target_complex.imag])
 
     z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
@@ -600,7 +604,7 @@ def main_teardrop1():
     Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
     PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
-    R_sp = Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+    R_sp = Rcomp(theta,T,W,Pbc,PWbc,nsub,npan)
     R = np.eye(npoin)
     #Not the most efficient but quadratic in the order of quadrature
     l=0
@@ -612,13 +616,21 @@ def main_teardrop1():
         l+=1
 
     I_coa = np.eye(npoin)
-    LHS = I_coa +lamda*(Kcirc@R)
+    LHS = I_coa +1.0*(Kcirc@R)@np.abs(wzp)
     #pot_boundary = np.loadtxt('bc_potential.np')
     RHS = 2*get_bc_conditions([test_charge], z)
 
     density = gmres(LHS, RHS)[0]
     #print(LHS, RHS)
     density_hat = R @ density
+
+    print("Density:", np.mean(density))
+    print("RHS:", np.mean(RHS))
+    print("LHS:", np.mean(LHS))
+    print("KCirc:", np.mean(Kcirc))
+    print("R:", np.mean(R))
+
+    print(LHS)
 
     z_list = np.empty((npoin,2))
     z_list[:,0] = z.real
@@ -629,8 +641,10 @@ def main_teardrop1():
     f_list = compute_f_true_teardrop(z, nz, target_complex)
     pot_at_target = np.sum(f_list*density_hat*awzp)
 
-    print(pot_at_target) 
+    print("F_LIST MEAN:", np.mean(f_list))
+    print("POT:",  pot_at_target) """
+
 
 if __name__ == '__main__':
-    #main_ellipse()
-    main_teardrop1()
+    main_ellipse()
+    #main_teardrop1()
