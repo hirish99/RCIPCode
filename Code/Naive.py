@@ -221,7 +221,16 @@ def fixed_curve_deriv(param, aspect):
         for param_idx in range(param.shape[1]):
             curve_deriv[:, panel_idx, param_idx] = true_deriv(param[panel_idx, param_idx], aspect)
     return curve_deriv
-    
+
+def test_curve_speed_teardrop(npan, theta):
+    panel_boundaries = np.linspace(0, 1, npan+1) 
+    param = make_panels(panel_boundaries)
+    curve_nodes = teardrop(param, theta=theta)
+    curve_deriv = curve_deriv_calc(D, curve_nodes)
+    curve_speed = (curve_deriv[0]**2 + curve_deriv[1]**2)**0.5
+    return curve_speed
+
+
 def test_curve_speed(npan, aspect):
     panel_boundaries = np.linspace(0, 1, npan+1) 
     param = make_panels(panel_boundaries)
@@ -236,6 +245,14 @@ def test_curve_weights(npan, aspect):
     speed = test_curve_speed(npan, aspect)
     #print(speed.shape)
     result = lege_weights * test_curve_speed(npan, aspect)
+    #print(result.shape)
+    return result.reshape(-1)
+
+def test_curve_weights_teardrop(npan, theta):
+    #print(lege_weights.shape)
+    speed = test_curve_speed_teardrop(npan, theta)
+    #print(speed.shape)
+    result = lege_weights * test_curve_speed_teardrop(npan, theta)
     #print(result.shape)
     return result.reshape(-1)
 

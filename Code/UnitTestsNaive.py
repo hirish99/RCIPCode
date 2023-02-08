@@ -3,10 +3,19 @@ from Naive import *
 import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
+    def test_test_curve_speed_teardrop(self):
+        npan = 6
+        a = test_curve_weights_teardrop(npan, np.pi/100)
+        print(np.sum(a)-2)
+        a = test_curve_weights_teardrop(npan, np.pi-.01)
+        print(np.sum(a)-np.pi)
+        #a = test_curve_weights(npan, 1)
+        #print(np.sum(a))
+
     def zesty_teardrop(self):
         npan = 4
         panel_boundaries = np.linspace(0, 1, npan+1)
-        curve_nodes = teardrop(make_panels(panel_boundaries), theta = np.pi/2)
+        curve_nodes = teardrop(make_panels(panel_boundaries), theta = np.pi/100)
         curve_nodes1 = ellipse(make_panels(panel_boundaries), 3)
 
         assert(curve_nodes.shape == curve_nodes1.shape)
@@ -18,8 +27,8 @@ class TestNaiveMethod(unittest.TestCase):
     def test_teardrop_normal(self):
         npan = 4
         panel_boundaries = np.linspace(0, 1, npan+1)
-        normals = teardrop_normal(make_panels(panel_boundaries), np.pi/2)
-        curve_nodes = teardrop(make_panels(panel_boundaries), theta = np.pi/2)
+        normals = teardrop_normal(make_panels(panel_boundaries), np.pi-.01)
+        curve_nodes = teardrop(make_panels(panel_boundaries), theta = np.pi-.01)
 
         i = np.random.randint(0,16)
         j = np.random.randint(0,4)
