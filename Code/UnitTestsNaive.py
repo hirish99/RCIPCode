@@ -27,8 +27,8 @@ class TestNaiveMethod(unittest.TestCase):
     def test_teardrop_normal(self):
         npan = 4
         panel_boundaries = np.linspace(0, 1, npan+1)
-        normals = teardrop_normal(make_panels(panel_boundaries), np.pi-.01)
-        curve_nodes = teardrop(make_panels(panel_boundaries), theta = np.pi-.01)
+        normals = teardrop_normal(make_panels(panel_boundaries), np.pi/2)
+        curve_nodes = teardrop(make_panels(panel_boundaries), theta = np.pi/2)
 
         i = np.random.randint(0,16)
         j = np.random.randint(0,4)

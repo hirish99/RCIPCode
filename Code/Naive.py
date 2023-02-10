@@ -22,8 +22,6 @@ def MAinit(z,zp,zpp,nz,w,wzp,npoin):
 
     for m in range(N):
         M1[m,m] = (-w*(zpp/zp).imag/2)[m]
-
-    
     retMe = (M1/np.pi)
 
     return retMe
@@ -68,6 +66,51 @@ def zinit(theta,sinter,sinterdiff,T,W,npan):
     wzp = w*zp
     
     return z, zp, zpp,nz,w,wzp, npoin
+
+class sympy_kernel_teardrop:
+    def __init__(self, aspect):
+        import warnings
+        warnings.filterwarnings("ignore")
+
+        t_p = sp.Symbol('t_p')
+        t = sp.Symbol('t')
+        a = sp.Symbol('a')
+
+        self.aspect = aspect
+        self.t_p = t_p
+        self.t = t
+        self.a = a
+
+        rp = sp.Matrix([sp.sin(sp.pi*t_p)*sp.cos((t_p-0.5)*a),sp.sin(sp.pi*t_p)*sp.sin((t_p-0.5)*a)])
+        r = sp.Matrix([sp.sin(sp.pi*t)*sp.cos((t-0.5)*a),sp.sin(sp.pi*t)*sp.sin((t-0.5)*a)])
+        vp = sp.simplify(sp.Matrix([-sp.diff(rp[1], t_p),sp.diff(rp[0], t_p)])/sp.sqrt((sp.diff(rp[1], t_p))**2+(sp.diff(rp[0], t_p))**2))
+
+        numerator = (vp.T* (r-rp))[0]
+        denominator = 2*sp.pi*((r-rp).T * (r-rp))[0]
+        expr = numerator/denominator
+
+        expr = expr.subs([(a, aspect)])
+        f = sp.utilities.lambdify([t,t_p],expr,"numpy")
+        self.kernel_lambda = f
+
+        expr2 = (r-rp).T * (r-rp)
+        expr2 = expr2.subs([(a, aspect)])
+        g = sp.utilities.lambdify([t,t_p],expr2,"numpy")
+
+        self.cancellation = g
+    
+    def kernel_evaluate_equal(self, t_in):
+        #You need to make this exact!
+        if t_in < 0.5:
+            return self.kernel_lambda(t_in, t_in+0.000001)
+        else:
+            return self.kernel_lambda(t_in, t_in-0.000001)
+
+    def kernel_evaluate(self, t_in, t_p_in):
+        return self.kernel_lambda(t_in, t_p_in)
+    
+    def cancel_evaluate(self, t_in, t_p_in):
+        return self.cancellation(t_in, t_p_in)
 
 class sympy_kernel:
     def __init__(self, aspect):
@@ -176,12 +219,11 @@ def teardrop(t, theta = np.pi/2):
         complex_pos.real, complex_pos.imag
     ])
 
-def teardrop_normal(t, theta = np.pi/2):
+def teardrop_normal(t, theta, npoin):
     ctan = zpfunc(t, theta)
-    cnormal = -complex(0,1)*ctan/np.abs(ctan)
-    return np.array([
-        cnormal.real, cnormal.imag
-    ])
+    cnormal = complex(0,1)*ctan/np.abs(ctan)
+    cnormal = cnormal.reshape(-1) 
+    return cnormal
 
 def ellipse_normal(t, stretch, npoin):
     tan = np.array([
@@ -380,44 +422,61 @@ def get_error(npan, test_charge, target_complex):
     return np.abs(out-true)
 
 
-
-""" def main_teardrop():
+def main_teardrop():
     #Defining Number of Panels
     #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
-    theta = np.pi/2
+    npan = 40
+    #print("Number of Panels: ", npan)
+    npoin = npan*16
 
-    #Number of panels = 10
-    npan = 10
-    sinter = np.linspace(0, 1, npan+1)
-    sinterdiff = np.ones(npan)/npan
-    test_charge = np.array([0,0.4])
-    target_complex= 0.5 + complex(0,1)*0.05
+    #Defining Relevant Parametrized Quantities
+    aspect = np.pi/2
+    panel_boundaries = np.linspace(0, 1, npan+1)
+    curve_nodes = teardrop(make_panels(panel_boundaries), aspect)
+    curve_nodes = curve_nodes.reshape(2,-1)
+    curve_normal = np.array(teardrop_normal(make_panels(panel_boundaries), aspect, npoin))
+    parametrization = make_panels(panel_boundaries).reshape(-1)
+    complex_positions = [complex(curve_nodes[0][i],curve_nodes[1][i]) for i in range(npoin)]
+    complex_positions = np.array(complex_positions)
+    plt.scatter(complex_positions.real, complex_positions.imag)
+    plt.axis('equal')
+    plt.title('Positions of Nodes')
+    
+    #D_K_old = compute_double_layer_kernel_test(complex_positions, curve_normal, aspect, npoin, parametrization)
+    sympy_kern = sympy_kernel_teardrop(np.pi/2)
+    D_K = np.zeros((npoin, npoin))
+    for i in range(npoin):
+        D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
+    for i in range(npoin):
+        D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
 
-    z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, lege_nodes, lege_weights, npan)
-    complex_positions = z
-    curve_normal = nz
 
-    plt.scatter(z.real,z.imag)
+    """ 
+    index = np.argmax(D_K - D_K_old)
+    print(index // npoin, index % npoin)
+    print(np.max(D_K - D_K_old))
+    """
+
+    W_shape = np.diag(test_curve_weights_teardrop(npan, aspect))
+    D_KW = D_K @ W_shape
+    LHS = 0.5*np.eye(npoin) + D_KW
+    #RHS = np.loadtxt("../InitialConditions/bc_potential.np")
+    test_charge = np.array([-0.25,0.4])
     plt.scatter(test_charge[0],test_charge[1])
-    plt.scatter(target_complex.real, target_complex.imag)
-    plt.show()
-
-    W_shape = np.diag(np.abs(wzp))
-    D_K = MAinit(z,zp,zpp,nz,w,wzp,npoin)
-
-    D_KW = D_K 
-    LHS = 0.5*np.eye(npoin) + D_KW @ W_shape
-    RHS = 2*get_bc_conditions([test_charge], z)
-
+    RHS = get_bc_conditions([test_charge], complex_positions)
+    #assert(np.max(np.abs(RHS-get_bc_conditions([test_charge], complex_positions)))<=1e-6)
+   
     density = gmres(LHS, RHS)[0]
-
-    print(LHS)
-
+    #print("Coarse Naive Density:", density)
+    #print("Coarse Naive Shape:", density.shape)
+    target_complex= 0.4+ complex(0,1)*0.2
     out = compute_double_layer_off_boundary(complex_positions, curve_normal, target_complex, npoin) @ W_shape @ density   
-
-    print("OUT:", out)
+    print("Result:", out)
     true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
-    print("True:", true) """
+    plt.scatter(target_complex.real,target_complex.imag)
+    print("True:", true)
+    print("Error:", np.abs(out-true))
+    plt.show()
 
 
 def main():
@@ -476,7 +535,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main_teardrop()
 
 
 
