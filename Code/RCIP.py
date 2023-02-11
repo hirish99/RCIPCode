@@ -7,7 +7,7 @@ import scipy.special as sps
 import warnings
 
 from Naive import get_bc_conditions
-from Naive import sympy_kernel, test_curve_weights
+from Naive import sympy_kernel, test_curve_weights, sympy_kernel_teardrop, zpfunc
 from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal
 from Naive import compute_double_layer_off_boundary, get_naive_potential
 n = 16
@@ -264,6 +264,22 @@ def MAinit_ellipse(parametrization, weights, aspect):
     D_KW = D_K @ W_shape
 
     return 2*D_KW
+
+def MAinit_teardrop(parametrization, weights, theta):
+    sympy_kern = sympy_kernel_teardrop(theta)
+    npoin = parametrization.shape[0]
+    D_K = np.zeros((npoin, npoin))
+    for i in range(npoin):
+        D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
+    for i in range(npoin):
+        D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
+
+    W_shape = np.diag(weights * np.abs(zpfunc(parametrization, theta))[0])
+
+    D_KW = D_K @ W_shape
+
+    return 2*D_KW
+
 
 
 def MAinit(z,zp,zpp,nz,w,wzp,npoin):

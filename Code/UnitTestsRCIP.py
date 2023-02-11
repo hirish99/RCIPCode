@@ -6,6 +6,21 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
+
+    def test_ellipse_teardrop(self):
+        npan = 11
+        nsub = 4
+        aspect = 3
+        theta = np.pi/2
+
+        param_fine, w_fine, kcirc_indices = give_fine_mesh_parametrization_ellipse(nsub, npan)
+
+
+        K1 = MAinit_ellipse(param_fine, w_fine, aspect)
+        K2 = MAinit_teardrop(param_fine, w_fine, theta)
+
+        assert(K1.shape == K2.shape)
+
     def test_compute_f_teardrop(self):
         z = np.array([complex(0,0)])
         nz = np.array([complex(0,1)])
@@ -45,12 +60,7 @@ class TestNaiveMethod(unittest.TestCase):
         
         print("Difference of Prolongation:",np.linalg.norm(f_fine - P @ f_coarse, 2))
 
-
-
-
-
-
-
+    
 
         
 
