@@ -6,12 +6,13 @@ from scipy.sparse.linalg import gmres
 import scipy.special as sps
 import warnings
 
-from Naive import get_bc_conditions
+from Naive import get_bc_conditions, teardrop
 from Naive import sympy_kernel, test_curve_weights, sympy_kernel_teardrop, zpfunc
 from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal
 from Naive import compute_double_layer_off_boundary, get_naive_potential
 n = 16
 T, W, _ = sps.legendre(n).weights.T
+sympy_kernel_teardrop_global = sympy_kernel_teardrop(np.pi/2)
 
 def compute_f_true(s,target_complex, aspect):
     npoin = s.shape[0]
@@ -266,13 +267,13 @@ def MAinit_ellipse(parametrization, weights, aspect):
     return 2*D_KW
 
 def MAinit_teardrop(parametrization, weights, theta):
-    sympy_kern = sympy_kernel_teardrop(theta)
+    #sympy_kernel_teardrop_global = sympy_kernel_teardrop(theta)
     npoin = parametrization.shape[0]
     D_K = np.zeros((npoin, npoin))
     for i in range(npoin):
-        D_K[i,:] = sympy_kern.kernel_evaluate(parametrization[i],parametrization)
+        D_K[i,:] = sympy_kernel_teardrop_global.kernel_evaluate(parametrization[i],parametrization)
     for i in range(npoin):
-        D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
+        D_K[i,i] = sympy_kernel_teardrop_global.kernel_evaluate_equal(parametrization[i])
 
     W_shape = np.diag(weights * np.abs(zpfunc(parametrization, theta))[0])
 
@@ -300,7 +301,21 @@ def MAinit(z,zp,zpp,nz,w,wzp,npoin):
     retMe = (M1/np.pi)
 
     return retMe
-    
+
+def Rcomp_teardrop(theta, T, W, Pbc, PWbc, nsub, npan):
+    R = None
+    #This I don't particularily believe. Nvm.
+    #It runs nsub+1 times.
+    for level in range(0,nsub+1):
+        s, w = zloc_init_ellipse(T, W, nsub, level, npan)
+        K = MAinit_teardrop(s, w, theta)
+        #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+        MAT = np.eye(96) + K
+        if level == 0:
+            R = np.linalg.inv(MAT[16:80,16:80])
+        MAT[16:80,16:80] = np.linalg.inv(R)
+        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
+    return R
 
 def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
     R = None
@@ -383,9 +398,19 @@ def give_fine_mesh_parametrization_ellipse(nsub, npan):
 
     return parametrization, weights/2, kcirc_indices
 
+def get_K_star_circ_fine_teardrop(nsub, npan, theta):
+    param, weights, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
+    
+    Kstar = MAinit_teardrop(param, weights, theta)
+    K = MAinit_teardrop(param, weights, theta)
+    kcirc = set(kcirc)
 
+    for i in range(K.shape[0]):
+        for j in range(K.shape[1]):
+            if (i in kcirc) or (j in kcirc):
+                Kstar[i,j] = 0
 
-
+    return Kstar, (K-Kstar)
 
 def get_K_star_circ_fine(nsub, npan, aspect):
     param, weights, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
@@ -458,6 +483,17 @@ def get_PW(npan, nsub):
     PW = W_fin @ P @ W_coarse_inv
 
     return PW
+
+def get_R_true_teardrop(npan, nsub, theta):
+    P = get_P(npan, nsub)
+    PW_T = get_PW(npan, nsub).T
+
+    Kstar_fine = get_K_star_circ_fine_teardrop(nsub, npan, theta)[0]
+
+    npoin = Kstar_fine.shape[0]
+
+    R = PW_T @ np.linalg.inv(np.eye(npoin) +  Kstar_fine) @ P
+    return R
 
 def get_R_true(npan, nsub, aspect):
     P = get_P(npan, nsub)
