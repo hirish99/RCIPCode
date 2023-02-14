@@ -9,7 +9,7 @@ import warnings
 from Naive import get_bc_conditions, teardrop
 from Naive import sympy_kernel, test_curve_weights, sympy_kernel_teardrop, zpfunc
 from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal
-from Naive import compute_double_layer_off_boundary, get_naive_potential
+from Naive import compute_double_layer_off_boundary, get_naive_potential, get_potential
 n = 16
 T, W, _ = sps.legendre(n).weights.T
 sympy_kernel_teardrop_global = sympy_kernel_teardrop(np.pi/2)
