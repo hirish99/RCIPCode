@@ -275,7 +275,7 @@ def MAinit_teardrop(parametrization, weights, theta):
     for i in range(npoin):
         D_K[i,i] = sympy_kernel_teardrop_global.kernel_evaluate_equal(parametrization[i])
 
-    W_shape = np.diag(weights * np.abs(zpfunc(parametrization, theta))[0])
+    W_shape = np.diag(weights * np.abs(zpfunc(parametrization, theta)))
 
     D_KW = D_K @ W_shape
 

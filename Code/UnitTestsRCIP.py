@@ -54,7 +54,7 @@ class TestNaiveMethod(unittest.TestCase):
         test_charge = np.array([-0.25,0.4])
         RHS = 2*get_bc_conditions([test_charge], z)
 
-        target_complex= 0.4+ complex(0,1)*0.2
+        target_complex= 0.4+ complex(0,1)*0.1
 
         density = gmres(LHS, RHS)[0]
         #print(LHS, RHS)
