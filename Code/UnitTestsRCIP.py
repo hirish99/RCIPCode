@@ -32,7 +32,7 @@ class TestNaiveMethod(unittest.TestCase):
 
     def test_get_R_teardrop_true(self):
         npan = 10
-        nsub = 30
+        nsub = 40
         theta = np.pi/2
 
         IP, IPW = IPinit(T,  W)
@@ -53,7 +53,7 @@ class TestNaiveMethod(unittest.TestCase):
                 bmask[i,j]=1
         Kcirc[bmask] = 0
 
-        #R = get_R_true_teardrop(npan,nsub,theta)
+    
 
         #Experimental
         
@@ -68,7 +68,10 @@ class TestNaiveMethod(unittest.TestCase):
                 R[i,j] = R_sp[l,m]
                 m+=1
             l+=1
-        
+
+        R_true = get_R_true_teardrop(npan,nsub,theta)
+        print("\nDifference In  Norm - NSUB:", nsub, " ", np.linalg.norm(R-R_true))
+        R = R_true
         #Experimental
 
         I_coa = np.eye(npoin)
