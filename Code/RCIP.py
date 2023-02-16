@@ -9,7 +9,7 @@ import warnings
 from Naive import get_bc_conditions, teardrop
 from Naive import sympy_kernel, test_curve_weights, sympy_kernel_teardrop, zpfunc
 from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal
-from Naive import compute_double_layer_off_boundary, get_naive_potential, get_potential
+from Naive import compute_double_layer_off_boundary, get_naive_potential, get_potential, get_error_teardrop_naive
 n = 16
 T, W, _ = sps.legendre(n).weights.T
 sympy_kernel_teardrop_global = sympy_kernel_teardrop(np.pi/2)
@@ -624,6 +624,75 @@ def main_ellipse():
     plt.scatter(test_charge[0], test_charge[1])
     plt.show()
 
+
+def get_error_teardrop_rcip(npan, nsub):
+    theta = np.pi/2
+
+    IP, IPW = IPinit(T,  W)
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+    s, w = zinit_ellipse(T,  W, npan)
+    z = zfunc(s, theta)
+    npoin = s.shape[0]  
+
+    Kcirc = MAinit_teardrop(s, w, theta)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    #R = get_R_true_teardrop(npan,nsub,theta)
+
+    #Experimental
+    
+    R_sp = Rcomp_teardrop(theta,T,W,Pbc,PWbc,nsub,npan)
+
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+    
+    #Experimental
+
+    I_coa = np.eye(npoin)
+
+    LHS = I_coa + (Kcirc@R)
+
+    test_charge = np.array([-0.25,0.4])
+    RHS = 2*get_bc_conditions([test_charge], z)
+
+    target_complex= 0.4+ complex(0,1)*0.2
+
+    density = gmres(LHS, RHS)[0]
+    #print(LHS, RHS)
+    density_hat = R @ density
+
+    z_list = np.empty((npoin,2))
+    z_list[:,0] = z.real
+    z_list[:,1] = z.imag
+    zp = zpfunc(s, theta)
+    f_list = compute_f_true_teardrop(z, complex(0,1)*zp/np.abs(zp), target_complex)
+
+    awzp = w * np.abs(zpfunc(s, theta))
+
+    pot_at_target = np.sum(f_list*density_hat*awzp)
+
+    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
+
+    #print("True Potential:", true)
+    #print("Potential At Target:", pot_at_target)
+    #print("Error:", np.abs(pot_at_target-true))
+    return np.abs(pot_at_target-true)
 
 """ def main_teardrop1():
     IP, IPW = IPinit(T,  W)

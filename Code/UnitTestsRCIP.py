@@ -6,9 +6,33 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
+    def test_RCIP_error_vs_naive(self):
+        pass
+        """  rcip_errors_2 = []
+            rcip_errors_4 = []
+            rcip_errors_8 = []
+            naive_errors = []
+            npan_list = []
+            for npan in range(5, 18, 2):
+                rcip_errors_2.append(get_error_teardrop_rcip(npan, 2))
+                rcip_errors_4.append(get_error_teardrop_rcip(npan, 4))
+                rcip_errors_8.append(get_error_teardrop_rcip(npan, 16))
+                naive_errors.append(get_error_teardrop_naive(npan))
+                npan_list.append(npan)
+            plt.scatter(npan_list, np.log10(rcip_errors_2), label="2 subdiv")
+            plt.scatter(npan_list, np.log10(rcip_errors_4), label="4 subdiv")
+            plt.scatter(npan_list, np.log10(rcip_errors_8), label="8 subdiv")
+            plt.xlabel("Number of Panels")
+            plt.ylabel("Log of Error")
+            plt.plot(npan_list, np.log(naive_errors), label="Naive")
+            plt.legend()
+            plt.show() """
+
+
+
     def test_get_R_teardrop_true(self):
-        npan = 40
-        nsub = 6
+        npan = 10
+        nsub = 30
         theta = np.pi/2
 
         IP, IPW = IPinit(T,  W)
@@ -29,11 +53,11 @@ class TestNaiveMethod(unittest.TestCase):
                 bmask[i,j]=1
         Kcirc[bmask] = 0
 
-        R = get_R_true_teardrop(npan,nsub,theta)
+        #R = get_R_true_teardrop(npan,nsub,theta)
 
         #Experimental
-        '''
-        R_sp = Rcomp_ellipse(theta,T,W,Pbc,PWbc,nsub,npan)
+        
+        R_sp = Rcomp_teardrop(theta,T,W,Pbc,PWbc,nsub,npan)
 
         R = np.eye(npoin)
         #Not the most efficient but quadratic in the order of quadrature
@@ -44,7 +68,7 @@ class TestNaiveMethod(unittest.TestCase):
                 R[i,j] = R_sp[l,m]
                 m+=1
             l+=1
-        '''
+        
         #Experimental
 
         I_coa = np.eye(npoin)
@@ -54,7 +78,7 @@ class TestNaiveMethod(unittest.TestCase):
         test_charge = np.array([-0.25,0.4])
         RHS = 2*get_bc_conditions([test_charge], z)
 
-        target_complex= 0.4+ complex(0,1)*0.1
+        target_complex= 0.4+ complex(0,1)*0.2
 
         density = gmres(LHS, RHS)[0]
         #print(LHS, RHS)
@@ -74,6 +98,7 @@ class TestNaiveMethod(unittest.TestCase):
 
         print("True Potential:", true)
         print("Potential At Target:", pot_at_target)
+        print("Error:", np.abs(pot_at_target-true))
 
 
 
@@ -133,7 +158,7 @@ class TestNaiveMethod(unittest.TestCase):
         
         R_true = get_R_true_teardrop(npan, nsub, theta)
 
-        print("RCOMP teardrop test:", np.max(R-R_true))
+        #print("RCOMP teardrop test:", np.max(R-R_true))
 
     def test_ellipse_teardrop(self):
         npan = 11
@@ -202,7 +227,7 @@ class TestNaiveMethod(unittest.TestCase):
         
         #print("Prolongation Operator Shape:", P.shape)
         
-        print("Difference of Prolongation:",np.linalg.norm(f_fine - P @ f_coarse, 2))
+        #print("Difference of Prolongation:",np.linalg.norm(f_fine - P @ f_coarse, 2))
 
     
 
@@ -216,7 +241,7 @@ class TestNaiveMethod(unittest.TestCase):
         errors = []
         for i in range(4,40,4):
             errors.append(self.get_cancelation(i,2,3))
-        print("Cancelation Errors:", errors)
+        #print("Cancelation Errors:", errors)
 
     def test_true_f(self):
         """ nsub = 1
@@ -270,7 +295,7 @@ class TestNaiveMethod(unittest.TestCase):
         
         param, weights, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
         true_density = get_density_true(param, weights, aspect)
-        print("RHO Fine difference:", np.abs(np.max(true_density-density_fine)))
+        #print("RHO Fine difference:", np.abs(np.max(true_density-density_fine)))
 
         #print("True Density", true_density)
         #print("Fine Density Shape:", true_density.shape)
@@ -458,7 +483,7 @@ class TestNaiveMethod(unittest.TestCase):
         
         R_true = get_R_true(npan, nsub, aspect)
 
-        print("RCOMP test:", np.max(np.abs(R-R_true)))
+        #print("RCOMP test:", np.max(np.abs(R-R_true)))
 
         #plt.title("Difference Between R/R_true")
         #plt.imshow(np.log(np.abs(R-R_true)+1e-15))
@@ -579,13 +604,13 @@ class TestNaiveMethod(unittest.TestCase):
         K_circ_coarse = get_K_circ_coarse(npan, aspect)
         P = get_P(npan, nsub)
         PW = get_PW(npan, nsub)
-        print("EQ16",np.max(K_circ_fine - P@K_circ_coarse@PW.T))
+        #print("EQ16",np.max(K_circ_fine - P@K_circ_coarse@PW.T))
 
     def test_PW_P(self):
         npan = 10
         PW = get_PW(npan,2)
         P = get_P(npan,2)
-        print("PW_P test", np.max(PW.T @ P - np.eye(16*npan)))
+        #print("PW_P test", np.max(PW.T @ P - np.eye(16*npan)))
 
     def test_get_PW(self):
         PW = get_PW(10,2)
