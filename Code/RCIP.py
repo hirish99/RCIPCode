@@ -8,7 +8,7 @@ import warnings
 
 from Naive import get_bc_conditions, teardrop
 from Naive import sympy_kernel, test_curve_weights, sympy_kernel_teardrop, zpfunc
-from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal
+from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal, teardrop_normal,test_curve_weights_teardrop
 from Naive import compute_double_layer_off_boundary, get_naive_potential, get_potential, get_error_teardrop_naive
 n = 16
 T, W, _ = sps.legendre(n).weights.T
@@ -355,6 +355,48 @@ def f(s, target):
 
 def get_param_T(end1, end2):
     return (T+1)/2 * (end2-end1) + end1
+
+
+
+def get_teardrop_boundaries(nsub, npan):
+    denom = 2 * npan
+
+    #the first 2 panels closest to the singularity correspond
+    #to tau^*
+    start = 2/npan
+    arr_endpoints = []
+    for i in range(nsub+2):
+        arr_endpoints.append(start)
+        start /= 2
+    arr_endpoints.append(0)
+
+    parametrization = np.array([])
+    param_weights = np.array([])
+    for i in range(len(arr_endpoints)-1, 0, -1):
+        #print(arr_endpoints[i],arr_endpoints[i-1])
+        parametrization = np.append(parametrization ,get_param_T(arr_endpoints[i],arr_endpoints[i-1]))
+        param_weights = np.append(param_weights, W*(arr_endpoints[i-1]-arr_endpoints[i]))
+
+
+
+    start_ind = len(parametrization)
+    otherpanels = np.linspace(2*(1/npan),1-2*(1/npan), npan-3)
+
+    otherpanelsT = np.array([])
+    otherweights = np.array([])
+    for i in range(len(otherpanels)-1):
+        otherpanelsT = np.append(otherpanelsT,get_param_T(otherpanels[i],otherpanels[i+1]))
+        otherweights = np.append(otherweights, W*(otherpanels[i+1]-otherpanels[i]))
+
+    end_in = start_ind + len(otherweights)
+
+    parametrization = np.append(np.append(parametrization, otherpanelsT), list(reversed(1-parametrization)))
+    weights = np.append(np.append(param_weights, otherweights), list(reversed(param_weights)))
+
+    kcirc_indices = np.arange(start_ind, end_in)
+
+    return np.append(np.append(list(reversed(arr_endpoints)), otherpanels), (1-arr_endpoints))
+
 
 
 def give_fine_mesh_parametrization_ellipse(nsub, npan):

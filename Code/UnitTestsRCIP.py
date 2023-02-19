@@ -7,26 +7,25 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
     def test_RCIP_error_vs_naive(self):
-        pass
-        """  rcip_errors_2 = []
-            rcip_errors_4 = []
-            rcip_errors_8 = []
-            naive_errors = []
-            npan_list = []
-            for npan in range(5, 18, 2):
-                rcip_errors_2.append(get_error_teardrop_rcip(npan, 2))
-                rcip_errors_4.append(get_error_teardrop_rcip(npan, 4))
-                rcip_errors_8.append(get_error_teardrop_rcip(npan, 16))
-                naive_errors.append(get_error_teardrop_naive(npan))
-                npan_list.append(npan)
-            plt.scatter(npan_list, np.log10(rcip_errors_2), label="2 subdiv")
-            plt.scatter(npan_list, np.log10(rcip_errors_4), label="4 subdiv")
-            plt.scatter(npan_list, np.log10(rcip_errors_8), label="8 subdiv")
-            plt.xlabel("Number of Panels")
-            plt.ylabel("Log of Error")
-            plt.plot(npan_list, np.log(naive_errors), label="Naive")
-            plt.legend()
-            plt.show() """
+        rcip_errors_2 = []
+        rcip_errors_4 = []
+        rcip_errors_8 = []
+        naive_errors = []
+        npan_list = []
+        for npan in range(5, 18, 2):
+            rcip_errors_2.append(get_error_teardrop_rcip(npan, 2))
+            rcip_errors_4.append(get_error_teardrop_rcip(npan, 4))
+            rcip_errors_8.append(get_error_teardrop_rcip(npan, 16))
+            naive_errors.append(get_error_teardrop_naive(npan))
+            npan_list.append(npan)
+        plt.scatter(npan_list, np.log10(rcip_errors_2), label="2 subdiv")
+        plt.scatter(npan_list, np.log10(rcip_errors_4), label="4 subdiv")
+        plt.scatter(npan_list, np.log10(rcip_errors_8), label="8 subdiv")
+        plt.xlabel("Number of Panels")
+        plt.ylabel("Log of Error")
+        plt.plot(npan_list, np.log(naive_errors), label="Naive")
+        plt.legend()
+        plt.show()
 
 
 

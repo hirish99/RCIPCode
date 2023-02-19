@@ -479,6 +479,7 @@ def main_teardrop():
     #plt.show()
 
 
+
 def get_error_teardrop_naive(npan):
     #print("Number of Panels: ", npan)
     npoin = npan*16
