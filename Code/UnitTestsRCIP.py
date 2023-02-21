@@ -6,7 +6,24 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
-    def test_RCIP_error_vs_naive(self):
+
+    def test_fig_3(self):
+        errors = []
+        nsub_list = []
+        npan = 10
+        for nsub in range(1, 20, 1):
+            errors.append(get_error_teardrop_rcip(npan, nsub))
+            nsub_list.append(nsub)
+
+        nsub_list = np.array(nsub_list)
+
+        print(nsub_list)
+        print(np.log10(errors))
+        plt.scatter(nsub_list, np.log10(errors))
+        plt.show()
+
+
+    def zesty_RCIP_error_vs_naive(self):
         rcip_errors_2 = []
         rcip_errors_4 = []
         rcip_errors_8 = []
@@ -22,8 +39,8 @@ class TestNaiveMethod(unittest.TestCase):
         plt.scatter(npan_list, np.log10(rcip_errors_4), label="4 subdiv")
         plt.scatter(npan_list, np.log10(rcip_errors_8), label="8 subdiv")
         plt.xlabel("Number of Panels")
-        plt.ylabel("Log of Error")
-        plt.plot(npan_list, np.log(naive_errors), label="Naive")
+        plt.ylabel("Log Base 10 of Error")
+        plt.plot(npan_list, np.log10(naive_errors), label="Naive")
         plt.legend()
         plt.show()
 
@@ -176,9 +193,9 @@ class TestNaiveMethod(unittest.TestCase):
         ellipsepoints = ellipse(param_fine, aspect)
         teardroppoints = teardrop(param_fine, np.pi-0.00001)
 
-        plt.scatter(ellipsepoints[0],ellipsepoints[1])
-        plt.scatter(teardroppoints[0],teardroppoints[1])
-        plt.axis('equal')
+        #plt.scatter(ellipsepoints[0],ellipsepoints[1])
+        #plt.scatter(teardroppoints[0],teardroppoints[1])
+        #plt.axis('equal')
 
 
         W_shape1 = np.diag(w_fine * np.abs(zpfunc_ellipse(param_fine, aspect))[0])

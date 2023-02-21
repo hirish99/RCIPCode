@@ -425,7 +425,7 @@ def get_error(npan, test_charge, target_complex):
 def main_teardrop():
     #Defining Number of Panels
     #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
-    npan = 10
+    npan = 16
     #print("Number of Panels: ", npan)
     npoin = npan*16
 
@@ -462,6 +462,7 @@ def main_teardrop():
     LHS = 0.5*np.eye(npoin) + D_KW
     #RHS = np.loadtxt("../InitialConditions/bc_potential.np")
     test_charge = np.array([-0.25,0.4])
+    
     #plt.scatter(test_charge[0],test_charge[1])
     RHS = get_bc_conditions([test_charge], complex_positions)
     #assert(np.max(np.abs(RHS-get_bc_conditions([test_charge], complex_positions)))<=1e-6)
@@ -537,7 +538,7 @@ def get_error_teardrop_naive(npan):
 def main():
     #Defining Number of Panels
     #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
-    npan = 40
+    npan = 16
     #print("Number of Panels: ", npan)
     npoin = npan*16
 
