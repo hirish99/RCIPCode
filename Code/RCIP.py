@@ -570,6 +570,96 @@ def get_R_true(npan, nsub, aspect):
     #Complete
 
 
+def get_error_ellipse_rcip(npan, nsub):
+    IP, IPW = IPinit(T,  W)
+
+    aspect = 3
+
+    #Number of panels = 10
+
+
+
+    s, w = zinit_ellipse(T,  W, npan)
+    z = zfunc_ellipse(s, aspect)
+    z = z[0]
+    npoin = s.shape[0]
+
+    #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+    Kcirc = MAinit_ellipse(s, w, aspect)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+    '''
+    So one interesting thing to note is that zloc_init and zinit do 2 different things. 
+    zinit should be considered the gold standard as this essentially defines
+    the order in which we label nodes when constructing all of our vectors
+    including our kernels. So in other words make sure that you keep this
+    consistent.
+    '''
+    R_sp = Rcomp_ellipse(aspect,T,W,Pbc,PWbc,nsub,npan)
+
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+
+
+    # get true value of R
+    #R = get_R_true(npan, nsub, aspect)
+
+
+
+    I_coa = np.eye(npoin)
+
+    LHS = I_coa + (Kcirc@R)
+    #pot_boundary = np.loadtxt('bc_potential.np')
+    
+    test_charge = np.array([-2,2])
+    RHS = 2*get_bc_conditions([test_charge], z)
+
+    #target = np.array([1,0.2])
+    target_complex= 1+ complex(0,1)*0.6
+
+    density = gmres(LHS, RHS)[0]
+    #print(LHS, RHS)
+    density_hat = R @ density
+
+    #print("LHS:", np.mean(LHS))
+    #print("Kcirc:", np.mean(Kcirc))
+    #print("R:", np.mean(R))
+
+    z_list = np.empty((npoin,2))
+    z_list[:,0] = z.real
+    z_list[:,1] = z.imag
+
+    f_list = compute_f_true(s, target_complex, aspect)
+
+    awzp = w * np.abs(zpfunc_ellipse(s, aspect))
+
+    pot_at_target = np.sum(f_list*density_hat*awzp)
+
+    #print(pot_at_target)
+
+    npan_naive = 11
+    out, true = get_naive_potential(npan_naive, test_charge, target_complex)
+
+    #print("RCIP Computation Error:", np.abs(pot_at_target - true))
+    return np.abs(pot_at_target - true)
 
 def main_ellipse():
     IP, IPW = IPinit(T,  W)
@@ -668,73 +758,71 @@ def main_ellipse():
 
 
 def get_error_teardrop_rcip(npan, nsub):
-    theta = np.pi/2
+        theta = np.pi/2
 
-    IP, IPW = IPinit(T,  W)
-    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
-    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
-    s, w = zinit_ellipse(T,  W, npan)
-    z = zfunc(s, theta)
-    npoin = s.shape[0]  
+        IP, IPW = IPinit(T,  W)
+        Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+        PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+        s, w = zinit_ellipse(T,  W, npan)
+        z = zfunc(s, theta)
+        npoin = s.shape[0]  
 
-    Kcirc = MAinit_teardrop(s, w, theta)
+        Kcirc = MAinit_teardrop(s, w, theta)
 
-    starind = [i for i in range(npoin-32,npoin)]
-    starind += [i for i in range(32)]
-    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+        starind = [i for i in range(npoin-32,npoin)]
+        starind += [i for i in range(32)]
+        bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
 
-    for i in starind:
-        for j in starind:
-            bmask[i,j]=1
-    Kcirc[bmask] = 0
+        for i in starind:
+            for j in starind:
+                bmask[i,j]=1
+        Kcirc[bmask] = 0
+        #Experimental
+        
+        R_sp = Rcomp_teardrop(theta,T,W,Pbc,PWbc,nsub,npan)
 
-    #R = get_R_true_teardrop(npan,nsub,theta)
+        R = np.eye(npoin)
+        #Not the most efficient but quadratic in the order of quadrature
+        l=0
+        for i in starind:
+            m=0
+            for j in starind:
+                R[i,j] = R_sp[l,m]
+                m+=1
+            l+=1
 
-    #Experimental
-    
-    R_sp = Rcomp_teardrop(theta,T,W,Pbc,PWbc,nsub,npan)
+        #R_true = get_R_true_teardrop(npan,nsub,theta)
+        #print("\nDifference In  Norm - NSUB:", nsub, " ", np.linalg.norm(R-R_true))
+        #R = R_true
+        #Experimental
 
-    R = np.eye(npoin)
-    #Not the most efficient but quadratic in the order of quadrature
-    l=0
-    for i in starind:
-        m=0
-        for j in starind:
-            R[i,j] = R_sp[l,m]
-            m+=1
-        l+=1
-    
-    #Experimental
+        I_coa = np.eye(npoin)
 
-    I_coa = np.eye(npoin)
+        LHS = I_coa + (Kcirc@R)
 
-    LHS = I_coa + (Kcirc@R)
+        test_charge = np.array([-0.25,0.4])
+        RHS = 2*get_bc_conditions([test_charge], z)
 
-    test_charge = np.array([-0.25,0.4])
-    RHS = 2*get_bc_conditions([test_charge], z)
+        target_complex= 0.01+ complex(0,1)*0
 
-    target_complex= 0.4+ complex(0,1)*0.2
+        density = gmres(LHS, RHS)[0]
+        #print(LHS, RHS)
+        density_hat = R @ density
 
-    density = gmres(LHS, RHS)[0]
-    #print(LHS, RHS)
-    density_hat = R @ density
+        z_list = np.empty((npoin,2))
+        z_list[:,0] = z.real
+        z_list[:,1] = z.imag
+        zp = zpfunc(s, theta)
+        f_list = compute_f_true_teardrop(z, complex(0,1)*zp/np.abs(zp), target_complex)
 
-    z_list = np.empty((npoin,2))
-    z_list[:,0] = z.real
-    z_list[:,1] = z.imag
-    zp = zpfunc(s, theta)
-    f_list = compute_f_true_teardrop(z, complex(0,1)*zp/np.abs(zp), target_complex)
+        awzp = w * np.abs(zpfunc(s, theta))
 
-    awzp = w * np.abs(zpfunc(s, theta))
+        pot_at_target = np.sum(f_list*density_hat*awzp)
 
-    pot_at_target = np.sum(f_list*density_hat*awzp)
+        true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
 
-    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
-
-    #print("True Potential:", true)
-    #print("Potential At Target:", pot_at_target)
-    #print("Error:", np.abs(pot_at_target-true))
-    return np.abs(pot_at_target-true)
+        print(pot_at_target-true)
+        return np.abs(pot_at_target-true)
 
 """ def main_teardrop1():
     IP, IPW = IPinit(T,  W)

@@ -7,11 +7,27 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
-    def test_fig_3(self):
+    def test_error_convergence_ellipse(self):
         errors = []
         nsub_list = []
-        npan = 10
-        for nsub in range(1, 20, 1):
+        npan = 20
+        for nsub in range(1, 10, 1):
+            errors.append(get_error_ellipse_rcip(npan, nsub))
+            nsub_list.append(nsub)
+
+        nsub_list = np.array(nsub_list)
+
+        print(nsub_list)
+        print(np.log10(errors))
+        plt.scatter(nsub_list, np.log10(errors))
+        plt.show() 
+
+
+    def zesty_fig_3(self):
+        errors = []
+        nsub_list = []
+        npan = 20
+        for nsub in range(1, 10, 1):
             errors.append(get_error_teardrop_rcip(npan, nsub))
             nsub_list.append(nsub)
 
@@ -20,7 +36,7 @@ class TestNaiveMethod(unittest.TestCase):
         print(nsub_list)
         print(np.log10(errors))
         plt.scatter(nsub_list, np.log10(errors))
-        plt.show()
+        plt.show() 
 
 
     def zesty_RCIP_error_vs_naive(self):
@@ -85,9 +101,9 @@ class TestNaiveMethod(unittest.TestCase):
                 m+=1
             l+=1
 
-        R_true = get_R_true_teardrop(npan,nsub,theta)
-        print("\nDifference In  Norm - NSUB:", nsub, " ", np.linalg.norm(R-R_true))
-        R = R_true
+        #R_true = get_R_true_teardrop(npan,nsub,theta)
+        #print("\nDifference In  Norm - NSUB:", nsub, " ", np.linalg.norm(R-R_true))
+        #R = R_true
         #Experimental
 
         I_coa = np.eye(npoin)
@@ -502,7 +518,7 @@ class TestNaiveMethod(unittest.TestCase):
         
         R_true = get_R_true(npan, nsub, aspect)
 
-        #print("RCOMP test:", np.max(np.abs(R-R_true)))
+        print("RCOMP Ellipse test:", np.max(np.abs(R-R_true)))
 
         #plt.title("Difference Between R/R_true")
         #plt.imshow(np.log(np.abs(R-R_true)+1e-15))
