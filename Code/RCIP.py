@@ -194,6 +194,20 @@ def zloc_init(theta, T, W, nsub, level, npan):
     
     return z,zp,zpp,nz,w,wzp
 
+def zloc_init_old(theta, T, W, nsub, level, npan):
+    denom = 2**(nsub-level) * npan
+    s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
+    s_new = np.append(list(reversed(1-s_new)),s_new)
+    w = np.append(np.append(W/4, W/4), W/2)/denom
+    w = np.append(list(reversed(w)), w)
+    z = zfunc(s_new, theta)
+    zp = zpfunc(s_new, theta)
+    zpp = zppfunc(s_new, theta)
+    nz = -complex(0,1)*zp/np.abs(zp)
+    wzp = w * zp
+    
+    return z,zp,zpp,nz,w,wzp
+
 def zloc_init_ellipse(T, W, nsub, level, npan):
     #level goes from 0 to nsub. 
     #returns a type b mesh which is used to compute
@@ -895,18 +909,49 @@ def get_error_teardrop_rcip(npan, nsub):
     true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
     print(pot_at_target-true) """
 
+def Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
+    for level in range(1, nsub+1):
+        z,zp,zpp,nz,w,wzp = zloc_init_old(theta,T,W,nsub,level,npan)
+        K = MAinit(z,zp,zpp,nz,w,wzp,96)
+        MAT = np.eye(96) + lamda*K
+        if level == 1:
+            R = np.linalg.inv(MAT[16:80,16:80])
+        MAT[16:80,16:80] = np.linalg.inv(R)
+        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
+    return R
 
-def old_rcip_problem():
+def MAinit_old(z,zp,zpp,nz,w,wzp,npoin):
+    import warnings
+    warnings.filterwarnings("ignore", message="divide by zero encountered in divide")
+
+    N = npoin
+    M1 = np.zeros((N,N))
+    ##Note that the formula for the Kernel is straightforward.
+    for m in range(N):
+        M1[:,m] = np.abs(wzp[m]) * (nz/(z[m]-z)).real
+
+    for m in range(N):
+        M1[m,m] = (-w*(zpp/zp).imag/2)[m]
+
+    warnings.filterwarnings("default", message="divide by zero encountered in divide")
+    
+    retMe = (M1/np.pi)
+
+    return retMe
+def old_rcip_problem(npan, nsub):
+    n = 16
+    T, W, _ = sps.legendre(n).weights.T
+
     IP, IPW = IPinit(T,  W)
 
     theta = np.pi/2
     lamda = 0.999
 
     #Number of panels = 10
-    npan = 10
+
     sinter = np.linspace(0, 1, npan+1)
     sinterdiff = np.ones(npan)/npan
-    nsub = 10
+
     evec = 1
     qref = 1.1300163213105365
 
@@ -926,7 +971,7 @@ def old_rcip_problem():
     Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
     PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
-    R_sp = Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+    R_sp = Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
     R = np.eye(npoin)
     #Not the most efficient but quadratic in the order of quadrature
     l=0
@@ -943,13 +988,29 @@ def old_rcip_problem():
     RHS = 2*lamda*(nz).real
     rhotilde = gmres(LHS, RHS)[0]
     rhohat = R @ rhotilde
-
     zeta = (z.real)*np.abs(wzp)
     q = np.sum(rhohat*zeta)
     error = (np.abs(qref-q)/np.abs(qref))
 
+    print(error)
+
+    return error
+
 
 
 if __name__ == '__main__':
-    main_ellipse()
+    #main_ellipse()
     #main_teardrop1()
+
+    x = []
+    array = []
+
+    for i in range(10, 100, 10):
+        array.append(np.log10(old_rcip_problem(i, 10)))
+        x.append(np.log10(i))
+    
+    plt.scatter(x, array)
+    plt.title("Python Code Directly Translated")
+    plt.xlabel("Log 10 of npan (nsub=1)")
+    plt.ylabel("Log 10 of rel. error")
+    plt.show()
