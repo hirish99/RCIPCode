@@ -875,13 +875,13 @@ def get_error_teardrop_rcip(npan, nsub):
     #print(LHS, RHS)
     density_hat = R @ density
 
-    print("Density:", np.mean(density))
-    print("RHS:", np.mean(RHS))
-    print("LHS:", np.mean(LHS))
-    print("KCirc:", np.mean(Kcirc))
-    print("R:", np.mean(R))
+    #print("Density:", np.mean(density))
+    #print("RHS:", np.mean(RHS))
+    #print("LHS:", np.mean(LHS))
+    #print("KCirc:", np.mean(Kcirc))
+    #print("R:", np.mean(R))
 
-    print(LHS)
+    #print(LHS)
 
     z_list = np.empty((npoin,2))
     z_list[:,0] = z.real
@@ -889,11 +889,65 @@ def get_error_teardrop_rcip(npan, nsub):
 
     awzp = np.abs(wzp)
 
-    f_list = compute_f_true_teardrop(z, nz, target_complex)
+    f_list = compute_f_true_teardrop(z, complex(0,1)*zp/np.abs(zp), target_complex)
     pot_at_target = np.sum(f_list*density_hat*awzp)
 
-    print("F_LIST MEAN:", np.mean(f_list))
-    print("POT:",  pot_at_target) """
+    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
+    print(pot_at_target-true) """
+
+
+def old_rcip_problem():
+    IP, IPW = IPinit(T,  W)
+
+    theta = np.pi/2
+    lamda = 0.999
+
+    #Number of panels = 10
+    npan = 10
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+    nsub = 10
+    evec = 1
+    qref = 1.1300163213105365
+
+    z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+
+    Kcirc = MAinit(z,zp,zpp,nz,w,wzp,npoin)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+    R_sp = Rcomp(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+    
+    I_coa = np.eye(npoin)
+    LHS = I_coa +lamda*(Kcirc@R)
+
+    RHS = 2*lamda*(nz).real
+    rhotilde = gmres(LHS, RHS)[0]
+    rhohat = R @ rhotilde
+
+    zeta = (z.real)*np.abs(wzp)
+    q = np.sum(rhohat*zeta)
+    error = (np.abs(qref-q)/np.abs(qref))
+
 
 
 if __name__ == '__main__':
