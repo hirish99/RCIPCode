@@ -1006,11 +1006,15 @@ if __name__ == '__main__':
     array = []
 
     for i in range(10, 100, 10):
-        array.append(np.log10(old_rcip_problem(i, 10)))
-        x.append(np.log10(i))
+        array.append((old_rcip_problem(i, 10)))
+        x.append((i))
     
-    plt.scatter(x, array)
+    fig = plt.figure()
+    ax = plt.gca()
+    ax.scatter(x, array)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
     plt.title("Python Code Directly Translated")
-    plt.xlabel("Log 10 of npan (nsub=1)")
-    plt.ylabel("Log 10 of rel. error")
+    plt.xlabel("npan (nsub=10)")
+    plt.ylabel("rel. error")
     plt.show()
