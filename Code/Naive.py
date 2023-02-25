@@ -135,21 +135,23 @@ class sympy_kernel:
         expr = numerator/denominator
 
         expr = expr.subs([(a, aspect)])
+        self.expr = expr
         f = sp.utilities.lambdify([t,t_p],expr,"numpy")
         self.kernel_lambda = f
-
 
         expr2 = (r-rp).T * (r-rp)
         expr2 = expr2.subs([(a, aspect)])
         g = sp.utilities.lambdify([t,t_p],expr2,"numpy")
 
-        
         self.cancellation = g
 
     def kernel_evaluate_equal(self, t_in):
         numerator = self.aspect
         denominator = (4*np.pi)*(self.aspect**2 * (np.sin(2*np.pi*t_in))**2 + (np.cos(2*np.pi*t_in))**2)**(1.5)
         return numerator/denominator
+    
+    def kernel_evaluate_exact(self, t_in, t_p_in):
+        return float(self.expr.subs([(self.t,t_in),(self.t_p,t_p_in)]).evalf(20))
 
     def kernel_evaluate(self, t_in, t_p_in):
         return self.kernel_lambda(t_in, t_p_in)

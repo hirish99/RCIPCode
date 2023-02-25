@@ -194,6 +194,29 @@ def zloc_init(theta, T, W, nsub, level, npan):
     
     return z,zp,zpp,nz,w,wzp
 
+def zloc_init_ellipse(T, W, nsub, level, npan):
+    #level goes from 0 to nsub. 
+    #returns a type b mesh which is used to compute
+    #the kernel
+    #different from the paper where level goes from 1,nsub
+    #note that nsub represents a type b mesh on \tau^*!!!
+    #
+    denom = 2**(nsub-level) * npan
+    s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
+    s_new = np.append(list(reversed(1-s_new)),s_new)
+    w = np.append(np.append(W/4, W/4), W/2)/denom
+    w = np.append(list(reversed(w)), w)
+    '''
+    z = zfunc_ellipse(s_new, a)
+    zp = zpfunc_ellipse(s_new, a)
+    zpp = zppfunc_ellipse(s_new, a)
+    nz = -complex(0,1)*zp/np.abs(zp)
+    wzp = w * zp
+    
+    return z,zp,zpp,nz,w,wzp '''
+
+    return s_new, w
+
 def zloc_init_old(theta, T, W, nsub, level, npan):
     denom = 2**(nsub-level) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
@@ -264,6 +287,24 @@ def MAinit_ellipse_cancellation(parametrization, aspect):
 
     return np.min(np.array(min_vals))
 
+def MAinit_ellipse_exact(parametrization, weights, aspect):
+
+    sympy_kern = sympy_kernel(aspect)
+    npoin = parametrization.shape[0]
+    D_K = np.zeros((npoin, npoin))
+    for i in range(npoin):
+        for j in range(npoin):
+            if i != j:
+                D_K[i,j] = sympy_kern.kernel_evaluate_exact(parametrization[i],parametrization[j])
+    for i in range(npoin):
+        D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
+
+    W_shape = np.diag(weights * np.abs(zpfunc_ellipse(parametrization, aspect))[0])
+
+    D_KW = D_K @ W_shape
+
+    return 2*D_KW
+
 def MAinit_ellipse(parametrization, weights, aspect):
 
     sympy_kern = sympy_kernel(aspect)
@@ -331,20 +372,7 @@ def Rcomp_teardrop(theta, T, W, Pbc, PWbc, nsub, npan):
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
     return R
 
-def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
-    R = None
-    #This I don't particularily believe. Nvm.
-    #It runs nsub+1 times.
-    for level in range(0,nsub+1):
-        s, w = zloc_init_ellipse(T, W, nsub, level, npan)
-        K = MAinit_ellipse(s, w, aspect)
-        #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
-        MAT = np.eye(96) + K
-        if level == 0:
-            R = np.linalg.inv(MAT[16:80,16:80])
-        MAT[16:80,16:80] = np.linalg.inv(R)
-        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
-    return R
+
 
 def Rcomp(theta,T,W,Pbc,PWbc,nsub,npan):
     R = None
@@ -583,6 +611,103 @@ def get_R_true(npan, nsub, aspect):
     return R
     #Complete
 
+def get_error_ellipse_rcip_accurate(npan, nsub):
+    IP, IPW = IPinit(T,  W)
+
+    aspect = 3
+
+    #Number of panels = 10
+
+
+
+    s, w = zinit_ellipse(T,  W, npan)
+    z = zfunc_ellipse(s, aspect)
+    z = z[0]
+    npoin = s.shape[0]
+
+    #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+    Kcirc = MAinit_ellipse_exact(s, w, aspect)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+    '''
+    So one interesting thing to note is that zloc_init and zinit do 2 different things. 
+    zinit should be considered the gold standard as this essentially defines
+    the order in which we label nodes when constructing all of our vectors
+    including our kernels. So in other words make sure that you keep this
+    consistent.
+    '''
+    R_sp = Rcomp_ellipse_exact(aspect,T,W,Pbc,PWbc,nsub,npan)
+
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+
+
+    # get true value of R
+    #R = get_R_true(npan, nsub, aspect)
+
+
+
+    I_coa = np.eye(npoin)
+
+    LHS = I_coa + (Kcirc@R)
+    #pot_boundary = np.loadtxt('bc_potential.np')
+    
+    test_charge = np.array([-3,3])
+    RHS = 2*get_bc_conditions([test_charge], z)
+
+    #target = np.array([1,0.2])
+    target_complex= 2 + complex(0,1)*0
+
+    plt.figure(1)
+    plt.scatter(z.real, z.imag)
+    plt.scatter(test_charge[0], test_charge[1])
+    plt.scatter(target_complex.real, target_complex.imag)
+
+    #density = gmres(LHS, RHS)[0]
+    density = np.linalg.solve(LHS, RHS)
+    #print(LHS, RHS)
+    density_hat = R @ density
+
+    #print("LHS:", np.mean(LHS))
+    #print("Kcirc:", np.mean(Kcirc))
+    #print("R:", np.mean(R))
+
+    z_list = np.empty((npoin,2))
+    z_list[:,0] = z.real
+    z_list[:,1] = z.imag
+
+    f_list = compute_f_true(s, target_complex, aspect)
+
+    awzp = w * np.abs(zpfunc_ellipse(s, aspect))
+
+    pot_at_target = np.sum(f_list*density_hat*awzp)
+
+    #print(pot_at_target)
+
+    npan_naive = 11
+    out, true = get_naive_potential(npan_naive, test_charge, target_complex)
+
+    #print("RCIP Computation Error:", np.abs(pot_at_target - true))
+    print(np.abs(pot_at_target - true))
+    return np.abs(pot_at_target - true)
 
 def get_error_ellipse_rcip(npan, nsub):
     IP, IPW = IPinit(T,  W)
@@ -643,13 +768,19 @@ def get_error_ellipse_rcip(npan, nsub):
     LHS = I_coa + (Kcirc@R)
     #pot_boundary = np.loadtxt('bc_potential.np')
     
-    test_charge = np.array([-2,2])
+    test_charge = np.array([-3,3])
     RHS = 2*get_bc_conditions([test_charge], z)
 
     #target = np.array([1,0.2])
-    target_complex= 1+ complex(0,1)*0.6
+    target_complex= 2 + complex(0,1)*0
 
-    density = gmres(LHS, RHS)[0]
+    plt.figure(1)
+    plt.scatter(z.real, z.imag)
+    plt.scatter(test_charge[0], test_charge[1])
+    plt.scatter(target_complex.real, target_complex.imag)
+
+    #density = gmres(LHS, RHS)[0]
+    density = np.linalg.solve(LHS, RHS)
     #print(LHS, RHS)
     density_hat = R @ density
 
@@ -673,6 +804,7 @@ def get_error_ellipse_rcip(npan, nsub):
     out, true = get_naive_potential(npan_naive, test_charge, target_complex)
 
     #print("RCIP Computation Error:", np.abs(pot_at_target - true))
+    print(np.abs(pot_at_target - true))
     return np.abs(pot_at_target - true)
 
 def main_ellipse():
@@ -819,7 +951,9 @@ def get_error_teardrop_rcip(npan, nsub):
 
         target_complex= 0.01+ complex(0,1)*0
 
-        density = gmres(LHS, RHS)[0]
+        #density = gmres(LHS, RHS)[0]
+        density = np.linalg.solve(LHS, RHS)
+        print(np.mean(LHS @ density - RHS))
         #print(LHS, RHS)
         density_hat = R @ density
 
@@ -909,6 +1043,37 @@ def get_error_teardrop_rcip(npan, nsub):
     true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
     print(pot_at_target-true) """
 
+def Rcomp_ellipse_exact(aspect, T, W, Pbc, PWbc, nsub, npan):
+    R = None
+    #This I don't particularily believe. Nvm.
+    #It runs nsub+1 times.
+    for level in range(1,nsub+1):
+        s, w = zloc_init_ellipse(T, W, nsub, level, npan)
+        K = MAinit_ellipse_exact(s, w, aspect)
+        #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+        MAT = np.eye(96) + K
+        if level == 1:
+            R = np.linalg.inv(MAT[16:80,16:80])
+        MAT[16:80,16:80] = np.linalg.inv(R)
+        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
+    return R
+
+
+def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
+    R = None
+    #This I don't particularily believe. Nvm.
+    #It runs nsub+1 times.
+    for level in range(1,nsub+1):
+        s, w = zloc_init_ellipse(T, W, nsub, level, npan)
+        K = MAinit_ellipse(s, w, aspect)
+        #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+        MAT = np.eye(96) + K
+        if level == 1:
+            R = np.linalg.inv(MAT[16:80,16:80])
+        MAT[16:80,16:80] = np.linalg.inv(R)
+        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
+    return R
+
 def Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
     for level in range(1, nsub+1):
         z,zp,zpp,nz,w,wzp = zloc_init_old(theta,T,W,nsub,level,npan)
@@ -946,14 +1111,13 @@ def old_rcip_problem(npan, nsub):
 
     theta = np.pi/2
     lamda = 0.999
+    evec = 1
+    qref = 1.1300163213105365
 
     #Number of panels = 10
 
     sinter = np.linspace(0, 1, npan+1)
     sinterdiff = np.ones(npan)/npan
-
-    evec = 1
-    qref = 1.1300163213105365
 
     z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
 
@@ -986,7 +1150,8 @@ def old_rcip_problem(npan, nsub):
     LHS = I_coa +lamda*(Kcirc@R)
 
     RHS = 2*lamda*(nz).real
-    rhotilde = gmres(LHS, RHS)[0]
+    #rhotilde = gmres(LHS, RHS)[0]
+    rhotilde = np.linalg.solve(LHS, RHS)
     rhohat = R @ rhotilde
     zeta = (z.real)*np.abs(wzp)
     q = np.sum(rhohat*zeta)
@@ -1005,16 +1170,13 @@ if __name__ == '__main__':
     x = []
     array = []
 
-    for i in range(10, 100, 10):
-        array.append((old_rcip_problem(i, 10)))
-        x.append((i))
-    
-    fig = plt.figure()
-    ax = plt.gca()
-    ax.scatter(x, array)
-    ax.set_yscale('log')
-    ax.set_xscale('log')
+    for i in range(10, 400, 10):
+        print(i)
+        array.append(np.log10(old_rcip_problem(i, 10)))
+        x.append(np.log10(i))
+
+    plt.scatter(x, array)
     plt.title("Python Code Directly Translated")
     plt.xlabel("npan (nsub=10)")
     plt.ylabel("rel. error")
-    plt.show()
+    plt.show() 

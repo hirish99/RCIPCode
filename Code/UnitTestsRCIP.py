@@ -9,17 +9,22 @@ class TestNaiveMethod(unittest.TestCase):
 
     def test_error_convergence_ellipse(self):
         errors = []
+        errors_exact = []
         nsub_list = []
-        npan = 20
+        npan = 4
         for nsub in range(1, 10, 1):
+            print(nsub)
             errors.append(get_error_ellipse_rcip(npan, nsub))
+            #errors_exact.append(get_error_ellipse_rcip_accurate(npan, nsub))
             nsub_list.append(nsub)
 
         nsub_list = np.array(nsub_list)
 
-        print(nsub_list)
-        print(np.log10(errors))
-        plt.scatter(nsub_list, np.log10(errors))
+        #print(nsub_list)
+        #print(np.log10(errors))
+        plt.figure(2)
+        plt.scatter(np.log10(nsub_list), np.log10(errors))
+        plt.scatter(np.log10(nsub_list), np.log10(errors_exact))
         plt.show() 
 
 
