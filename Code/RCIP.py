@@ -1199,7 +1199,8 @@ def old_rcip_problem_new_kernel(npan, nsub):
     zeta = (z.real)*np.abs(wzp)
     q = np.sum(rhohat*zeta)
     error = (np.abs(qref-q)/np.abs(qref))
-    print(error)
+    #print(error)
+    return error
 
 def old_rcip_problem(npan, nsub):
     n = 16
@@ -1233,7 +1234,7 @@ def old_rcip_problem(npan, nsub):
     Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
     PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
-    
+
 
     R_sp = Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
     R = np.eye(npoin)
@@ -1257,7 +1258,7 @@ def old_rcip_problem(npan, nsub):
     q = np.sum(rhohat*zeta)
     error = (np.abs(qref-q)/np.abs(qref))
 
-    print(error)
+    #print(error)
 
     return error
 
@@ -1266,17 +1267,22 @@ def old_rcip_problem(npan, nsub):
 if __name__ == '__main__':
     #main_ellipse()
     #main_teardrop1()
-    old_rcip_problem_new_kernel(10, 3)
-    """     x = []
+    x = []
     array = []
+    array_new = []
 
-    for i in range(10, 400, 10):
+    npan = 10
+
+    for i in range(10, 40, 5):
         print(i)
-        array.append(np.log10(old_rcip_problem(i, 10)))
+        array.append(np.log10(old_rcip_problem(npan, i)))
+        array_new.append(np.log10(old_rcip_problem_new_kernel(npan, i)))
         x.append(np.log10(i))
 
-    plt.scatter(x, array)
+    plt.scatter(x, array, label='old')
+    plt.scatter(x, array_new, label='new')
+    plt.legend()
     plt.title("Python Code Directly Translated")
-    plt.xlabel("npan (nsub=10)")
+    plt.xlabel("nsub (npan=10)")
     plt.ylabel("rel. error")
-    plt.show()  """
+    plt.show()  
