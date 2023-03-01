@@ -67,6 +67,43 @@ def zinit(theta,sinter,sinterdiff,T,W,npan):
     
     return z, zp, zpp,nz,w,wzp, npoin
 
+class sympy_old_kernel_teardrop:
+    def __init__(self, aspect):
+        import warnings
+        warnings.filterwarnings("ignore")
+
+        t_p = sp.Symbol('t_p')
+        t = sp.Symbol('t')
+        a = sp.Symbol('a')
+
+        self.aspect = aspect
+        self.t_p = t_p
+        self.t = t
+        self.a = a
+
+        rp = sp.Matrix([sp.sin(sp.pi*t_p)*sp.cos((t_p-0.5)*a),sp.sin(sp.pi*t_p)*sp.sin((t_p-0.5)*a)])
+        r = sp.Matrix([sp.sin(sp.pi*t)*sp.cos((t-0.5)*a),sp.sin(sp.pi*t)*sp.sin((t-0.5)*a)])
+        v = sp.simplify(sp.Matrix([-sp.diff(r[1], t),sp.diff(r[0], t)])/sp.sqrt((sp.diff(r[1], t))**2+(sp.diff(r[0], t))**2))
+
+        numerator = (v.T* (rp-r))[0]
+        denominator = 2*sp.pi*((r-rp).T * (r-rp))[0]
+        expr = numerator/denominator
+
+        expr = expr.subs([(a, aspect)])
+        f = sp.utilities.lambdify([t,t_p],expr,"numpy")
+        self.kernel_lambda = f
+
+    def kernel_evaluate_equal(self, t_in):
+        #You need to make this exact!
+        if t_in < 0.5:
+            return self.kernel_lambda(t_in, t_in+0.000001)
+        else:
+            return self.kernel_lambda(t_in, t_in-0.000001)
+
+    def kernel_evaluate(self, t_in, t_p_in):
+        return self.kernel_lambda(t_in, t_p_in)
+
+
 class sympy_kernel_teardrop:
     def __init__(self, aspect):
         import warnings
@@ -154,7 +191,7 @@ class sympy_kernel:
         return float(self.expr.subs([(self.t,t_in),(self.t_p,t_p_in)]).evalf(20))
 
     def kernel_evaluate(self, t_in, t_p_in):
-        return self.kernel_lambda(t_in, t_p_in)
+        return self.kernel_lambda(t_in, t_p_in) 
     
     def cancel_evaluate(self, t_in, t_p_in):
         return self.cancellation(t_in, t_p_in)

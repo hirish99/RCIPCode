@@ -6,13 +6,41 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
+    def test_accuracy_new_vs_old(self):
+        T, W, _ = sps.legendre(n).weights.T
+        npan = 10
+        theta = np.pi/2
+        lamda = 0.999
+        sinter = np.linspace(0, 1, npan+1)
+        sinterdiff = np.ones(npan)/npan
+        z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+        Kold = MAinit(z,zp,zpp,nz,w,wzp,npoin)
+        
 
+        parametrization, weights = zinit_ellipse(T,  W, npan)
+        kern = sympy_old_kernel_teardrop(theta)
+
+        npoin = parametrization.shape[0]
+        D_K = np.zeros((npoin, npoin))
+        for i in range(npoin):
+            D_K[i,:] = kern.kernel_evaluate(parametrization[i],parametrization)
+        for i in range(npoin):
+            D_K[i,i] = kern.kernel_evaluate_equal(parametrization[i])
+
+        W_shape = np.diag(weights * np.abs(zpfunc(parametrization, theta)))
+
+        D_KW = D_K @ W_shape
+
+        Knew = 2*D_KW
+
+        print(Kold-Knew)
+        
     def test_error_convergence_ellipse(self):
         errors = []
         errors_exact = []
         nsub_list = []
         npan = 4
-        for nsub in range(1, 10, 1):
+        for nsub in range(1, 4, 1):
             print(nsub)
             errors.append(get_error_ellipse_rcip(npan, nsub))
             #errors_exact.append(get_error_ellipse_rcip_accurate(npan, nsub))
@@ -24,7 +52,7 @@ class TestNaiveMethod(unittest.TestCase):
         #print(np.log10(errors))
         plt.figure(2)
         plt.scatter(np.log10(nsub_list), np.log10(errors))
-        plt.scatter(np.log10(nsub_list), np.log10(errors_exact))
+        #plt.scatter(np.log10(nsub_list), np.log10(errors_exact))
         plt.show() 
 
 

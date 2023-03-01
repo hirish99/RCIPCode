@@ -10,6 +10,7 @@ from Naive import get_bc_conditions, teardrop
 from Naive import sympy_kernel, test_curve_weights, sympy_kernel_teardrop, zpfunc
 from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal, teardrop_normal,test_curve_weights_teardrop
 from Naive import compute_double_layer_off_boundary, get_naive_potential, get_potential, get_error_teardrop_naive
+from Naive import sympy_old_kernel_teardrop
 n = 16
 T, W, _ = sps.legendre(n).weights.T
 sympy_kernel_teardrop_global = sympy_kernel_teardrop(np.pi/2)
@@ -294,8 +295,8 @@ def MAinit_ellipse_exact(parametrization, weights, aspect):
     D_K = np.zeros((npoin, npoin))
     for i in range(npoin):
         for j in range(npoin):
-            if i != j:
-                D_K[i,j] = sympy_kern.kernel_evaluate_exact(parametrization[i],parametrization[j])
+                if i != j:
+                    D_K[i,j] = sympy_kern.kernel_evaluate_exact(parametrization[i],parametrization[j])
     for i in range(npoin):
         D_K[i,i] = sympy_kern.kernel_evaluate_equal(parametrization[i])
 
@@ -703,8 +704,8 @@ def get_error_ellipse_rcip_accurate(npan, nsub):
     #print(pot_at_target)
 
     npan_naive = 11
-    out, true = get_naive_potential(npan_naive, test_charge, target_complex)
-
+    #out, true = get_naive_potential(npan_naive, test_charge, target_complex)
+    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
     #print("RCIP Computation Error:", np.abs(pot_at_target - true))
     print(np.abs(pot_at_target - true))
     return np.abs(pot_at_target - true)
@@ -759,7 +760,8 @@ def get_error_ellipse_rcip(npan, nsub):
 
 
     # get true value of R
-    #R = get_R_true(npan, nsub, aspect)
+    #R= get_R_true(npan, nsub, aspect)
+    #print(np.max(np.abs(R-R_true)))
 
 
 
@@ -800,9 +802,10 @@ def get_error_ellipse_rcip(npan, nsub):
 
     #print(pot_at_target)
 
-    npan_naive = 11
-    out, true = get_naive_potential(npan_naive, test_charge, target_complex)
+    npan_naive = 10
+    #out, true = get_naive_potential(npan_naive, test_charge, target_complex)
 
+    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
     #print("RCIP Computation Error:", np.abs(pot_at_target - true))
     print(np.abs(pot_at_target - true))
     return np.abs(pot_at_target - true)
@@ -953,7 +956,7 @@ def get_error_teardrop_rcip(npan, nsub):
 
         #density = gmres(LHS, RHS)[0]
         density = np.linalg.solve(LHS, RHS)
-        print(np.mean(LHS @ density - RHS))
+        #print(np.mean(LHS @ density - RHS))
         #print(LHS, RHS)
         density_hat = R @ density
 

@@ -3,6 +3,9 @@ from Naive import *
 import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
+
+
+
     def test_test_curve_speed_teardrop(self):
         npan = 6
         a = test_curve_weights_teardrop(npan, np.pi/100)
