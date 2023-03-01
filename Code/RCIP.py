@@ -14,6 +14,7 @@ from Naive import sympy_old_kernel_teardrop
 n = 16
 T, W, _ = sps.legendre(n).weights.T
 sympy_kernel_teardrop_global = sympy_kernel_teardrop(np.pi/2)
+kern_old_global = sympy_old_kernel_teardrop(np.pi/2)
 
 def compute_f_true(s,target_complex, aspect):
     npoin = s.shape[0]
@@ -337,6 +338,22 @@ def MAinit_teardrop(parametrization, weights, theta):
 
     return 2*D_KW
 
+def MAinit_teardrop_old_kernel(parametrization, weights, theta):
+
+
+    npoin = parametrization.shape[0]
+    D_K = np.zeros((npoin, npoin))
+    for i in range(npoin):
+        D_K[i,:] = kern_old_global.kernel_evaluate(parametrization[i],parametrization)
+    for i in range(npoin):
+        D_K[i,i] = kern_old_global.kernel_evaluate_equal(parametrization[i])
+
+    W_shape = np.diag(weights * np.abs(zpfunc(parametrization, theta)))
+
+    D_KW = D_K @ W_shape
+
+    return -2*D_KW
+
 
 
 def MAinit(z,zp,zpp,nz,w,wzp,npoin):
@@ -372,8 +389,6 @@ def Rcomp_teardrop(theta, T, W, Pbc, PWbc, nsub, npan):
         MAT[16:80,16:80] = np.linalg.inv(R)
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
     return R
-
-
 
 
 def Rcomp(theta,T,W,Pbc,PWbc,nsub,npan):
@@ -619,8 +634,6 @@ def get_error_ellipse_rcip_accurate(npan, nsub):
     aspect = 3
 
     #Number of panels = 10
-
-
 
     s, w = zinit_ellipse(T,  W, npan)
     z = zfunc_ellipse(s, aspect)
@@ -1078,6 +1091,21 @@ def Rcomp_ellipse(aspect, T, W, Pbc, PWbc, nsub, npan):
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
     return R
 
+def Rcomp_old_kernel_teardrop_new(theta,lamda, T, W, Pbc, PWbc, nsub, npan):
+    R = None
+    #This I don't particularily believe. Nvm.
+    #It runs nsub+1 times.
+    for level in range(0,nsub+1):
+        s, w = zloc_init_ellipse(T, W, nsub, level, npan)
+        K = MAinit_teardrop_old_kernel(s, w, theta)
+        #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+        MAT = np.eye(96) + lamda*K
+        if level == 0:
+            R = np.linalg.inv(MAT[16:80,16:80])
+        MAT[16:80,16:80] = np.linalg.inv(R)
+        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
+    return R
+
 def Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
     for level in range(1, nsub+1):
         z,zp,zpp,nz,w,wzp = zloc_init_old(theta,T,W,nsub,level,npan)
@@ -1107,6 +1135,72 @@ def MAinit_old(z,zp,zpp,nz,w,wzp,npoin):
     retMe = (M1/np.pi)
 
     return retMe
+
+
+
+def old_rcip_problem_new_kernel(npan, nsub):
+    n = 16
+    T, W, _ = sps.legendre(n).weights.T
+
+    IP, IPW = IPinit(T,  W)
+
+    theta = np.pi/2
+    lamda = 0.999
+    evec = 1
+    qref = 1.1300163213105365
+
+    #Number of panels = 10
+
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+
+    z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+
+
+
+
+    parametrization, weights = zinit_ellipse(T,  W, npan)
+    #kern = sympy_old_kernel_teardrop(theta)
+
+    Kcirc = MAinit_teardrop_old_kernel(parametrization,weights,np.pi/2)
+
+    #Kcirc = MAinit(z,zp,zpp,nz,w,wzp,npoin)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+    R_sp = Rcomp_old_kernel_teardrop_new(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+    
+    I_coa = np.eye(npoin)
+    LHS = I_coa +lamda*(Kcirc@R)
+
+    RHS = 2*lamda*(nz).real
+    #rhotilde = gmres(LHS, RHS)[0]
+    rhotilde = np.linalg.solve(LHS, RHS)
+    rhohat = R @ rhotilde
+    zeta = (z.real)*np.abs(wzp)
+    q = np.sum(rhohat*zeta)
+    error = (np.abs(qref-q)/np.abs(qref))
+    print(error)
+
 def old_rcip_problem(npan, nsub):
     n = 16
     T, W, _ = sps.legendre(n).weights.T
@@ -1170,8 +1264,8 @@ def old_rcip_problem(npan, nsub):
 if __name__ == '__main__':
     #main_ellipse()
     #main_teardrop1()
-
-    x = []
+    old_rcip_problem_new_kernel(10, 3)
+    """     x = []
     array = []
 
     for i in range(10, 400, 10):
@@ -1183,4 +1277,4 @@ if __name__ == '__main__':
     plt.title("Python Code Directly Translated")
     plt.xlabel("npan (nsub=10)")
     plt.ylabel("rel. error")
-    plt.show() 
+    plt.show()  """

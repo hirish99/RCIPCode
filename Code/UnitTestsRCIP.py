@@ -6,6 +6,28 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
+
+    def test_rcomp_old_vs_new(self):
+        n = 16
+        T, W, _ = sps.legendre(n).weights.T
+
+        IP, IPW = IPinit(T,  W)
+
+        theta = np.pi/2
+        lamda = 0.999
+        npan = 10
+        nsub = 3
+
+        Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+        PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+        R_sp_new = Rcomp_old_kernel_teardrop_new(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+        R_sp_old = Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+
+        print(np.max(R_sp_new - R_sp_old)/np.max(R_sp_old))
+
+
+
     def test_accuracy_new_vs_old(self):
         T, W, _ = sps.legendre(n).weights.T
         npan = 10
@@ -19,23 +41,10 @@ class TestNaiveMethod(unittest.TestCase):
         
 
         parametrization, weights = zinit_ellipse(T,  W, npan)
-        kern = sympy_old_kernel_teardrop(theta)
+        Knew = MAinit_teardrop_old_kernel(parametrization, weights, np.pi/2)
 
-        npoin = parametrization.shape[0]
-        D_K = np.zeros((npoin, npoin))
-        for i in range(npoin):
-            D_K[i,:] = kern.kernel_evaluate(parametrization[i],parametrization)
-        for i in range(npoin):
-            D_K[i,i] = kern.kernel_evaluate_equal(parametrization[i])
-
-        W_shape = np.diag(weights * np.abs(zpfunc(parametrization, theta)))
-
-        D_KW = D_K @ W_shape
-
-        Knew = 2*D_KW
-
-        argmax = np.argmax(np.abs(Kold+Knew))
-        max = (Kold+Knew)[argmax%Kold.shape[0],argmax//Kold.shape[1]]/(Kold)[argmax%Kold.shape[0],argmax//Kold.shape[1]]
+        argmax = np.argmax(np.abs(Kold-Knew))
+        max = (Kold-Knew)[argmax%Kold.shape[0],argmax//Kold.shape[1]]/(Kold)[argmax%Kold.shape[0],argmax//Kold.shape[1]]
 
         print("MAX REL. DIFFERENCE: ", np.abs(max))
         
