@@ -1233,6 +1233,8 @@ def old_rcip_problem(npan, nsub):
     Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
     PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
+    
+
     R_sp = Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
     R = np.eye(npoin)
     #Not the most efficient but quadratic in the order of quadrature
