@@ -10,9 +10,10 @@ class TestNaiveMethod(unittest.TestCase):
         T, W, _ = sps.legendre(n).weights.T
         npan = 10
         theta = np.pi/2
-        lamda = 0.999
+
         sinter = np.linspace(0, 1, npan+1)
         sinterdiff = np.ones(npan)/npan
+
         z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
         Kold = MAinit(z,zp,zpp,nz,w,wzp,npoin)
         
@@ -33,7 +34,10 @@ class TestNaiveMethod(unittest.TestCase):
 
         Knew = 2*D_KW
 
-        print(Kold-Knew)
+        argmax = np.argmax(np.abs(Kold+Knew))
+        max = (Kold+Knew)[argmax%Kold.shape[0],argmax//Kold.shape[1]]/(Kold)[argmax%Kold.shape[0],argmax//Kold.shape[1]]
+
+        print("MAX REL. DIFFERENCE: ", np.abs(max))
         
     def test_error_convergence_ellipse(self):
         errors = []
@@ -41,7 +45,7 @@ class TestNaiveMethod(unittest.TestCase):
         nsub_list = []
         npan = 4
         for nsub in range(1, 4, 1):
-            print(nsub)
+            #print(nsub)
             errors.append(get_error_ellipse_rcip(npan, nsub))
             #errors_exact.append(get_error_ellipse_rcip_accurate(npan, nsub))
             nsub_list.append(nsub)
@@ -50,10 +54,10 @@ class TestNaiveMethod(unittest.TestCase):
 
         #print(nsub_list)
         #print(np.log10(errors))
-        plt.figure(2)
-        plt.scatter(np.log10(nsub_list), np.log10(errors))
+        #plt.figure(2)
+        #plt.scatter(np.log10(nsub_list), np.log10(errors))
         #plt.scatter(np.log10(nsub_list), np.log10(errors_exact))
-        plt.show() 
+        #plt.show() 
 
 
     def zesty_fig_3(self):
@@ -66,10 +70,10 @@ class TestNaiveMethod(unittest.TestCase):
 
         nsub_list = np.array(nsub_list)
 
-        print(nsub_list)
-        print(np.log10(errors))
-        plt.scatter(nsub_list, np.log10(errors))
-        plt.show() 
+        #print(nsub_list)
+        #print(np.log10(errors))
+        #plt.scatter(nsub_list, np.log10(errors))
+        #plt.show() 
 
 
     def zesty_RCIP_error_vs_naive(self):
@@ -164,9 +168,9 @@ class TestNaiveMethod(unittest.TestCase):
 
         true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
 
-        print("True Potential:", true)
-        print("Potential At Target:", pot_at_target)
-        print("Error:", np.abs(pot_at_target-true))
+        #print("True Potential:", true)
+        #print("Potential At Target:", pot_at_target)
+        #print("Error:", np.abs(pot_at_target-true))
 
 
 

@@ -375,6 +375,7 @@ def Rcomp_teardrop(theta, T, W, Pbc, PWbc, nsub, npan):
 
 
 
+
 def Rcomp(theta,T,W,Pbc,PWbc,nsub,npan):
     R = None
     for level in range(0, nsub):
@@ -707,7 +708,7 @@ def get_error_ellipse_rcip_accurate(npan, nsub):
     #out, true = get_naive_potential(npan_naive, test_charge, target_complex)
     true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
     #print("RCIP Computation Error:", np.abs(pot_at_target - true))
-    print(np.abs(pot_at_target - true))
+    #print(np.abs(pot_at_target - true))
     return np.abs(pot_at_target - true)
 
 def get_error_ellipse_rcip(npan, nsub):
@@ -807,7 +808,7 @@ def get_error_ellipse_rcip(npan, nsub):
 
     true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
     #print("RCIP Computation Error:", np.abs(pot_at_target - true))
-    print(np.abs(pot_at_target - true))
+    #print(np.abs(pot_at_target - true))
     return np.abs(pot_at_target - true)
 
 def main_ellipse():
@@ -879,9 +880,9 @@ def main_ellipse():
     #print(LHS, RHS)
     density_hat = R @ density
 
-    print("LHS:", np.mean(LHS))
-    print("Kcirc:", np.mean(Kcirc))
-    print("R:", np.mean(R))
+    #print("LHS:", np.mean(LHS))
+    #print("Kcirc:", np.mean(Kcirc))
+    #print("R:", np.mean(R))
 
     z_list = np.empty((npoin,2))
     z_list[:,0] = z.real
