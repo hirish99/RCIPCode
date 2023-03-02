@@ -1,19 +1,21 @@
 from Naive import *
 
+def test_test_curve_speed_teardrop():
+    npan = 20
+    a = test_curve_weights_teardrop(npan, np.pi/100)
+
+    #a = test_curve_weights_teardrop(npan, np.pi-.01)
+    #print(np.sum(a)-np.pi)
+
+    #print(np.abs(np.sum(a)-np.pi))
+    #print(np.abs(np.sum(a)) - 2)
+    assert(np.abs(np.sum(a)-2)<=1e-2)
+    #a = test_curve_weights(npan, 1)
+    #print(np.sum(a))
+
 import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
-
-
-
-    def test_test_curve_speed_teardrop(self):
-        npan = 6
-        a = test_curve_weights_teardrop(npan, np.pi/100)
-        print(np.sum(a)-2)
-        a = test_curve_weights_teardrop(npan, np.pi-.01)
-        print(np.sum(a)-np.pi)
-        #a = test_curve_weights(npan, 1)
-        #print(np.sum(a))
 
     def zesty_teardrop(self):
         npan = 4
@@ -27,7 +29,7 @@ class TestNaiveMethod(unittest.TestCase):
         plt.scatter(curve_nodes1[0], curve_nodes1[1])
         plt.show()
     
-    def test_teardrop_normal(self):
+    def zesty_teardrop_normal(self):
         npan = 4
         panel_boundaries = np.linspace(0, 1, npan+1)
         normals = teardrop_normal(make_panels(panel_boundaries), np.pi/2)
@@ -181,4 +183,5 @@ class TestNaiveMethod(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    test_test_curve_speed_teardrop()
     unittest.main()

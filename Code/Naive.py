@@ -6,6 +6,7 @@ import cmath as cm
 from scipy.sparse.linalg import gmres
 import sympy as sp
 import warnings
+import pytest
 
 n = 16
 lege_nodes, lege_weights, _ = sps.legendre(n).weights.T
@@ -303,6 +304,7 @@ def fixed_curve_deriv(param, aspect):
             curve_deriv[:, panel_idx, param_idx] = true_deriv(param[panel_idx, param_idx], aspect)
     return curve_deriv
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_curve_speed_teardrop(npan, theta):
     panel_boundaries = np.linspace(0, 1, npan+1) 
     param = make_panels(panel_boundaries)
@@ -311,7 +313,7 @@ def test_curve_speed_teardrop(npan, theta):
     curve_speed = (curve_deriv[0]**2 + curve_deriv[1]**2)**0.5
     return curve_speed
 
-
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_curve_speed(npan, aspect):
     panel_boundaries = np.linspace(0, 1, npan+1) 
     param = make_panels(panel_boundaries)
@@ -321,6 +323,7 @@ def test_curve_speed(npan, aspect):
     curve_speed = (curve_deriv[0]**2 + curve_deriv[1]**2)**0.5
     return curve_speed
     
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_curve_weights(npan, aspect):
     #print(lege_weights.shape)
     speed = test_curve_speed(npan, aspect)
@@ -329,6 +332,7 @@ def test_curve_weights(npan, aspect):
     #print(result.shape)
     return result.reshape(-1)
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_curve_weights_teardrop(npan, theta):
     #print(lege_weights.shape)
     speed = test_curve_speed_teardrop(npan, theta)
