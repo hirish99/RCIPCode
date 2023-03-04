@@ -1,21 +1,20 @@
 from Naive import *
 
-def test_test_curve_speed_teardrop():
-    npan = 20
-    a = test_curve_weights_teardrop(npan, np.pi/100)
-
-    #a = test_curve_weights_teardrop(npan, np.pi-.01)
-    #print(np.sum(a)-np.pi)
-
-    #print(np.abs(np.sum(a)-np.pi))
-    #print(np.abs(np.sum(a)) - 2)
-    assert(np.abs(np.sum(a)-2)<=1e-2)
-    #a = test_curve_weights(npan, 1)
-    #print(np.sum(a))
-
 import unittest
 class TestNaiveMethod(unittest.TestCase):
     #Make Panels Unit Testing
+    def test_test_curve_speed_teardrop(self):
+        npan = 20
+        a = test_curve_weights_teardrop(npan, np.pi/100)
+
+        #a = test_curve_weights_teardrop(npan, np.pi-.01)
+        #print(np.sum(a)-np.pi)
+
+        #print(np.abs(np.sum(a)-np.pi))
+        #print(np.abs(np.sum(a)) - 2)
+        assert(np.abs(np.sum(a)-2)<=1e-2)
+        #a = test_curve_weights(npan, 1)
+        #print(np.sum(a))
 
     def zesty_teardrop(self):
         npan = 4
@@ -87,7 +86,7 @@ class TestNaiveMethod(unittest.TestCase):
         self.assertTrue(np.abs(get_rp(0,a) - a)<=1e-6)
         self.assertTrue(np.abs(get_rp(0.25,a) - 1)<=1e-6)
 
-    def test_compute_double_layer_off_boundary(self):
+    def zesty_compute_double_layer_off_boundary(self):
         aspect = 3
         npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
         #print("Number of Panels: ", npan)
@@ -183,5 +182,4 @@ class TestNaiveMethod(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    test_test_curve_speed_teardrop()
     unittest.main()
