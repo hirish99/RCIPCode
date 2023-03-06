@@ -7,6 +7,31 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_double_layer_accuracy(self):
+        T, W, _ = sps.legendre(n).weights.T
+        npan = 10
+        theta = np.pi/2
+
+        sinter = np.linspace(0, 1, npan+1)
+        sinterdiff = np.ones(npan)/npan
+
+        z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+        Kold = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
+        
+
+        parametrization, weights = zinit_ellipse(T,  W, npan)
+        Knew = MAinit_teardrop(parametrization, weights, np.pi/2)
+
+        argmax = np.argmax(np.abs(Kold-Knew))
+        max = (Kold-Knew)[argmax%Kold.shape[0],argmax//Kold.shape[1]]/(Kold)[argmax%Kold.shape[0],argmax//Kold.shape[1]]
+
+
+
+
+        print("MAX REL. DIFFERENCE: ", np.abs(max))
+
+
+
     def test_rcomp_old_vs_new(self):
         n = 16
         T, W, _ = sps.legendre(n).weights.T

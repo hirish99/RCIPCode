@@ -355,7 +355,25 @@ def MAinit_teardrop_old_kernel(parametrization, weights, theta):
     return -2*D_KW
 
 
+def MAinitDL(z,zp,zpp,nz,w,wzp,npoin):
+    import warnings
+    warnings.filterwarnings("ignore", message="divide by zero encountered in divide")
 
+    N = npoin
+    M1 = np.zeros((N,N))
+    ##Note that the formula for the Kernel is straightforward.
+    for m in range(N):
+        M1[:,m] = np.abs(wzp[m]) * (nz[m]/(z-z[m])).real
+
+    for m in range(N):
+        M1[m,m] = (-w*(zpp/zp).imag/2)[m]
+
+    warnings.filterwarnings("default", message="divide by zero encountered in divide")
+    
+    retMe = (M1/np.pi)
+
+    return -retMe
+    
 def MAinit(z,zp,zpp,nz,w,wzp,npoin):
     import warnings
     warnings.filterwarnings("ignore", message="divide by zero encountered in divide")
