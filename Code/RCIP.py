@@ -182,6 +182,36 @@ def zinit_ellipse(T,W,npan):
     
     return s, w
 
+def zinit_ellipse_true(T,W,npan,a):
+    npoin = 16*npan #np is the number of points used for discretization in total
+
+    #npan = 10
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+
+    s = np.zeros(npoin)
+    w = np.zeros(npoin)
+
+    for k in range(npan):
+        start_in = k*16
+        end_in = (k+1)*16
+        #print(start_in, end_in)
+        sdif = sinterdiff[k]/2
+        #essentially s represents the parametrization from 0 to 1
+        #We divide the values in T by 2 get a range -0.5 to 0.5
+        #Then center it at the midpoint of each interval. Simple.
+        s[start_in:end_in] = (sinter[k]+sinter[k+1])/2 + sdif*T
+        #The weights are correspondingly scaled/2 since we are are transforming
+        #from -1,1 to x,x+sinter
+        w[start_in:end_in] = W*sdif
+        z = zfunc_ellipse(s, a)[0]
+        zp = zpfunc_ellipse(s, a)[0]
+        zpp = zppfunc_ellipse(s, a)[0]
+        nz = (-complex(0,1)*zp/np.abs(zp))
+        wzp = (w*zp) 
+    
+    return z,zp,zpp,nz,w,wzp,npoin
+
 def zloc_init(theta, T, W, nsub, level, npan):
     denom = 2**(nsub-(level+1)) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
