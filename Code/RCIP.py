@@ -249,6 +249,29 @@ def zloc_init_ellipse(T, W, nsub, level, npan):
 
     return s_new, w
 
+
+def zloc_init_ellipse_true(T, W, nsub, level, npan,a):
+    #level goes from 0 to nsub. 
+    #returns a type b mesh which is used to compute
+    #the kernel
+    #different from the paper where level goes from 1,nsub
+    #note that nsub represents a type b mesh on \tau^*!!!
+    #
+    denom = 2**(nsub-level) * npan
+    s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
+    s_new = np.append(list(reversed(1-s_new)),s_new)
+    w = np.append(np.append(W/4, W/4), W/2)/denom
+    w = np.append(list(reversed(w)), w)
+    npoin =  w.shape[0]
+
+    z = zfunc_ellipse(s_new, a)[0]
+    zp = zpfunc_ellipse(s_new, a)[0]
+    zpp = zppfunc_ellipse(s_new, a)[0]
+    nz = (-complex(0,1)*zp/np.abs(zp))
+    wzp = w * zp
+    
+    return z,zp,zpp,nz,w,wzp,npoin
+
 def zloc_init_old(theta, T, W, nsub, level, npan):
     denom = 2**(nsub-level) * npan
     s_new = np.append(np.append(T/4 + 0.25, T/4 + 0.75), T/2+1.5)/denom
@@ -739,10 +762,10 @@ def get_error_ellipse_rcip_accurate(npan, nsub):
     #target = np.array([1,0.2])
     target_complex= 2 + complex(0,1)*0
 
-    plt.figure(1)
-    plt.scatter(z.real, z.imag)
-    plt.scatter(test_charge[0], test_charge[1])
-    plt.scatter(target_complex.real, target_complex.imag)
+    #plt.figure(1)
+    #plt.scatter(z.real, z.imag)
+    #plt.scatter(test_charge[0], test_charge[1])
+    #plt.scatter(target_complex.real, target_complex.imag)
 
     #density = gmres(LHS, RHS)[0]
     density = np.linalg.solve(LHS, RHS)
@@ -839,9 +862,9 @@ def get_error_ellipse_rcip(npan, nsub):
     target_complex= 2 + complex(0,1)*0
 
     plt.figure(1)
-    plt.scatter(z.real, z.imag)
-    plt.scatter(test_charge[0], test_charge[1])
-    plt.scatter(target_complex.real, target_complex.imag)
+    #plt.scatter(z.real, z.imag)
+    #plt.scatter(test_charge[0], test_charge[1])
+    #plt.scatter(target_complex.real, target_complex.imag)
 
     #density = gmres(LHS, RHS)[0]
     density = np.linalg.solve(LHS, RHS)
@@ -962,10 +985,10 @@ def main_ellipse():
 
     print("RCIP Computation Error:", np.abs(pot_at_target - true))
     print("Naive Computation Error:", np.abs((out - true)))
-    plt.scatter(z.real, z.imag)
-    plt.scatter(target_complex.real, target_complex.imag)
-    plt.scatter(test_charge[0], test_charge[1])
-    plt.show()
+    #plt.scatter(z.real, z.imag)
+    #plt.scatter(target_complex.real, target_complex.imag)
+    #plt.scatter(test_charge[0], test_charge[1])
+    #plt.show()
 
 
 def get_error_teardrop_rcip(npan, nsub):
@@ -1324,11 +1347,11 @@ if __name__ == '__main__':
     for i in range(10, 40, 5):
         print(i)
         array.append(np.log10(old_rcip_problem(npan, i)))
-        array_new.append(np.log10(old_rcip_problem_new_kernel(npan, i)))
+        #array_new.append(np.log10(get_error_ellipse_rcip(npan, i)))
         x.append(np.log10(i))
 
     plt.scatter(x, array, label='old')
-    plt.scatter(x, array_new, label='new')
+    #plt.scatter(x, array_new, label='new')
     plt.legend()
     plt.title("Python Code Directly Translated")
     plt.xlabel("nsub (npan=10)")

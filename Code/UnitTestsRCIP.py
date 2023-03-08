@@ -6,6 +6,46 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
+
+    def test_double_layer_accuracy_ellipse(self):
+        T, W, _ = sps.legendre(n).weights.T
+        aspect = 3
+        npan=10
+        nsub = 10
+        level = 1
+
+        sinter = np.linspace(0, 1, npan+1)
+        sinterdiff = np.ones(npan)/npan
+
+        z, zp, zpp, nz, w, wzp, npoin = zloc_init_ellipse_true(T, W, nsub, level, npan,aspect)
+
+
+
+
+
+        
+        Kold = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
+        
+
+        parametrization, weights = zloc_init_ellipse(T, W, nsub, level, npan)
+        Knew = MAinit_ellipse(parametrization, weights, aspect)
+
+        argmax = np.argmax(np.abs(Kold-Knew))
+        max = (Kold-Knew)[argmax%Kold.shape[0],argmax//Kold.shape[1]]/(Kold)[argmax%Kold.shape[0],argmax//Kold.shape[1]]
+
+
+        nom = argmax%Kold.shape[0]
+        prim = argmax//Kold.shape[1]
+        print(nom, prim)
+        print("z:", z[nom])
+        print("z':", z[prim])
+        print("t:", parametrization[nom])
+        print("t':", parametrization[prim])
+        print("NPAN:",npan," NSUB:",nsub)
+        print("MAX REL. DIFFERENCE ELLIPSE: ", np.abs(max))
+        print("AVG. DIFFERENCE ELLIPSE: ", np.mean(Kold-Knew))
+
+
     def test_double_layer_accuracy(self):
         T, W, _ = sps.legendre(n).weights.T
         npan = 10
@@ -40,39 +80,7 @@ class TestNaiveMethod(unittest.TestCase):
         print("AVG. DIFFERENCE TEARDROP: ", np.mean(Kold-Knew))
 
 
-    def test_double_layer_accuracy_ellipse(self):
-        T, W, _ = sps.legendre(n).weights.T
-        npan = 10
-        aspect = 3
 
-        sinter = np.linspace(0, 1, npan+1)
-        sinterdiff = np.ones(npan)/npan
-
-        z, zp, zpp, nz, w, wzp, npoin = zinit_ellipse_true(T,W,npan,aspect)
-        
-        Kold = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
-        
-
-        parametrization, weights = zinit_ellipse(T,  W, npan)
-        Knew = MAinit_ellipse(parametrization, weights, aspect)
-
-        argmax = np.argmax(np.abs(Kold-Knew))
-        max = (Kold-Knew)[argmax%Kold.shape[0],argmax//Kold.shape[1]]/(Kold)[argmax%Kold.shape[0],argmax//Kold.shape[1]]
-
-
-        nom = argmax%Kold.shape[0]
-        prim = argmax//Kold.shape[1]
-        print(nom, prim)
-        print("z:", z[nom])
-        print("z':", z[prim])
-        print("t:", parametrization[nom])
-        print("t':", parametrization[prim])
-
-
-
-
-        print("MAX REL. DIFFERENCE ELLIPSE: ", np.abs(max))
-        print("AVG. DIFFERENCE ELLIPSE: ", np.mean(Kold-Knew))
 
     def test_rcomp_old_vs_new(self):
         n = 16
