@@ -859,9 +859,9 @@ def get_error_ellipse_rcip(npan, nsub):
     RHS = 2*get_bc_conditions([test_charge], z)
 
     #target = np.array([1,0.2])
-    target_complex= 2 + complex(0,1)*0
+    target_complex= 2.9 + complex(0,1)*0
 
-    plt.figure(1)
+    #plt.figure(1)
     #plt.scatter(z.real, z.imag)
     #plt.scatter(test_charge[0], test_charge[1])
     #plt.scatter(target_complex.real, target_complex.imag)
@@ -1058,7 +1058,7 @@ def get_error_teardrop_rcip(npan, nsub):
         true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
 
         print(pot_at_target-true)
-        return np.abs(pot_at_target-true)
+        return np.abs(pot_at_target-true)/np.abs(true)
 
 """ def main_teardrop1():
     IP, IPW = IPinit(T,  W)
@@ -1346,14 +1346,14 @@ if __name__ == '__main__':
 
     for i in range(10, 40, 5):
         print(i)
-        array.append(np.log10(old_rcip_problem(npan, i)))
-        #array_new.append(np.log10(get_error_ellipse_rcip(npan, i)))
-        x.append(np.log10(i))
-
-    plt.scatter(x, array, label='old')
-    #plt.scatter(x, array_new, label='new')
+        array.append((old_rcip_problem(npan, i)))
+        array_new.append((get_error_ellipse_rcip(npan, i)))
+        x.append((i))
+    plt.loglog(x, array, 'o',label='old rcip code', )
+    plt.loglog(x, array_new,'o',label='new ellipse code')
     plt.legend()
-    plt.title("Python Code Directly Translated")
+    plt.title("Convergence of Problem w/No Singularity")
     plt.xlabel("nsub (npan=10)")
     plt.ylabel("rel. error")
+
     plt.show()  
