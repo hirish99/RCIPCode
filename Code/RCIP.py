@@ -419,7 +419,7 @@ def MAinitDL(z,zp,zpp,nz,w,wzp,npoin):
         M1[:,m] = np.abs(wzp[m]) * (nz[m]/(z-z[m])).real
 
     for m in range(N):
-        M1[m,m] = (-w*(zpp/zp).imag/2)[m]
+        M1[m,m] = -(w[m]*(zpp/zp).imag/2)[m]
 
     warnings.filterwarnings("default", message="divide by zero encountered in divide")
     
@@ -456,6 +456,17 @@ def Rcomp_teardrop(theta, T, W, Pbc, PWbc, nsub, npan):
         #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
         MAT = np.eye(96) + K
         if level == 0:
+            R = np.linalg.inv(MAT[16:80,16:80])
+        MAT[16:80,16:80] = np.linalg.inv(R)
+        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
+    return R
+
+def Rcomp_teardrop_improved(theta, T, W, Pbc, PWbc, nsub, npan):
+    for level in range(1, nsub+1):
+        z,zp,zpp,nz,w,wzp = zloc_init_old(theta,T,W,nsub,level,npan)
+        K = MAinitDL(z,zp,zpp,nz,w,wzp,96)
+        MAT = np.eye(96) + K
+        if level == 1:
             R = np.linalg.inv(MAT[16:80,16:80])
         MAT[16:80,16:80] = np.linalg.inv(R)
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
@@ -1433,67 +1444,7 @@ def get_error_ellipse_rcip_improved(npan, nsub):
     '''
     R_sp = Rcomp_ellipse_improved(aspect,T,W,Pbc,PWbc,nsub,npan)
 
-    R = np.eye(npoin)
-    #Not the most efficient but quadratic in the order of quadrature
-    l=0
-    for i in starind:
-        m=0
-        for j in starind:
-            R[i,j] = R_sp[l,m]
-            m+=1
-        l+=1
-
-
-    # get true value of R
-    #R= get_R_true(npan, nsub, aspect)
-    #print(np.max(np.abs(R-R_true)))
-
-
-
-    I_coa = np.eye(npoin)
-
-    LHS = I_coa + (Kcirc@R)
-    #pot_boundary = np.loadtxt('bc_potential.np')
     
-    test_charge = np.array([-3,3])
-    RHS = 2*get_bc_conditions([test_charge], z)
-
-    #target = np.array([1,0.2])
-    target_complex= 2.9 + complex(0,1)*0
-
-    #plt.figure(1)
-    #plt.scatter(z.real, z.imag)
-    #plt.scatter(test_charge[0], test_charge[1])
-    #plt.scatter(target_complex.real, target_complex.imag)
-
-    #density = gmres(LHS, RHS)[0]
-    density = np.linalg.solve(LHS, RHS)
-    #print(LHS, RHS)
-    density_hat = R @ density
-
-    #print("LHS:", np.mean(LHS))
-    #print("Kcirc:", np.mean(Kcirc))
-    #print("R:", np.mean(R))
-
-    z_list = np.empty((npoin,2))
-    z_list[:,0] = z.real
-    z_list[:,1] = z.imag
-
-    f_list = compute_f_true(s, target_complex, aspect)
-
-    awzp = w * np.abs(zpfunc_ellipse(s, aspect))
-
-    pot_at_target = np.sum(f_list*density_hat*awzp)
-
-    #print(pot_at_target)
-
-    npan_naive = 10
-    #out, true = get_naive_potential(npan_naive, test_charge, target_complex)
-
-    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
-    #print("RCIP Computation Error:", np.abs(pot_at_target - true))
-    #print(np.abs(pot_at_target - true))
-    return np.abs(pot_at_target - true)
 
 def Rcomp_ellipse_improved(aspect, T, W, Pbc, PWbc, nsub, npan):
     R = None
@@ -1510,6 +1461,92 @@ def Rcomp_ellipse_improved(aspect, T, W, Pbc, PWbc, nsub, npan):
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
     return R
 
+
+def get_error_teardrop_rcip_improved(npan, nsub):
+    T, W, _ = sps.legendre(n).weights.T
+    IP, IPW = IPinit(T,  W)
+
+    theta = np.pi/2
+
+    #Number of panels = 10
+
+
+    
+    s, _ = zinit_ellipse(T,  W, npan)
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+
+    z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+
+    #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+    Kcirc = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+    '''
+    So one interesting thing to note is that zloc_init and zinit do 2 different things. 
+    zinit should be considered the gold standard as this essentially defines
+    the order in which we label nodes when constructing all of our vectors
+    including our kernels. So in other words make sure that you keep this
+    consistent.
+    '''
+    R_sp = Rcomp_teardrop_improved(theta,T,W,Pbc,PWbc,nsub,npan)
+
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+
+    #R_true = get_R_true_teardrop(npan,nsub,theta)
+    #print("\nDifference In  Norm - NSUB:", nsub, " ", np.linalg.norm(R-R_true))
+    #R = R_true
+    #Experimental
+
+    I_coa = np.eye(npoin)
+
+    LHS = I_coa + (Kcirc@R)
+
+    test_charge = np.array([-0.25,0.4]) 
+    RHS = 2*get_bc_conditions([test_charge], z)
+
+    target_complex= 0.01+ complex(0,1)*0
+
+    #density = gmres(LHS, RHS)[0]
+    density = np.linalg.solve(LHS, RHS)
+    #print(np.mean(LHS @ density - RHS))
+    #print(LHS, RHS)
+    density_hat = R @ density
+
+    z_list = np.empty((npoin,2))
+    z_list[:,0] = z.real
+    z_list[:,1] = z.imag
+    zp = zpfunc(s, theta)
+    f_list = compute_f_true_teardrop(z, complex(0,1)*zp/np.abs(zp), target_complex)
+
+    awzp = w * np.abs(zpfunc(s, theta))
+
+    pot_at_target = np.sum(f_list*density_hat*awzp)
+
+    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
+
+    print(pot_at_target-true)
+    return np.abs(pot_at_target-true)/np.abs(true)
+
 if __name__ == '__main__':
     #main_ellipse()
     #main_teardrop1()
@@ -1519,15 +1556,16 @@ if __name__ == '__main__':
 
     npan = 10
 
-    for i in range(10, 40, 5):
+    for i in range(5, 40, 5):
         print(i)
         array.append((old_rcip_problem(npan, i)))
-        array_new.append((get_error_ellipse_rcip_improved(npan, i)))
+        array_new.append((get_error_teardrop_rcip_improved(npan, i)))
+        #array_new.append((get_error_teardrop_rcip(npan, i)))
         x.append((i))
     plt.loglog(x, array, 'o',label='old rcip code')
-    plt.loglog(x, array_new,'o',label='new ellipse code')
+    plt.loglog(x, array_new,'o',label='new teardrop code')
     plt.legend()
-    plt.title("Convergence of Problem w/No Singularity")
+    plt.title("Convergence of Problem w/ Singularity")
     plt.xlabel("nsub (npan=10)")
     plt.ylabel("rel. error")
 

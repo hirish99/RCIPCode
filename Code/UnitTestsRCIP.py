@@ -74,8 +74,8 @@ class TestNaiveMethod(unittest.TestCase):
         print("t':", parametrization[prim])
 
 
-
-
+        print("KOLD:", Kold[nom,prim])
+        print("KNEW:", Knew[nom,prim])
         print("MAX REL. DIFFERENCE TEARDROP: ", np.abs(max))
         print("AVG. DIFFERENCE TEARDROP: ", np.mean(Kold-Knew))
 
