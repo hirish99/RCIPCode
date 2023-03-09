@@ -1334,6 +1334,181 @@ def old_rcip_problem(npan, nsub):
     return error
 
 
+def old_kernel_double_ellipse(npan, nsub):
+    n = 16
+    T, W, _ = sps.legendre(n).weights.T
+
+    IP, IPW = IPinit(T,  W)
+
+    theta = np.pi/2
+    lamda = 0.999
+    evec = 1
+    qref = 1.1300163213105365
+
+    #Number of panels = 10
+
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+
+    z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+
+    Kcirc = MAinit(z,zp,zpp,nz,w,wzp,npoin)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+
+
+    R_sp = Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+    
+    I_coa = np.eye(npoin)
+    LHS = I_coa +lamda*(Kcirc@R)
+
+    RHS = 2*lamda*(nz).real
+    #rhotilde = gmres(LHS, RHS)[0]
+    rhotilde = np.linalg.solve(LHS, RHS)
+    rhohat = R @ rhotilde
+    zeta = (z.real)*np.abs(wzp)
+    q = np.sum(rhohat*zeta)
+    error = (np.abs(qref-q)/np.abs(qref))
+
+    #print(error)
+
+    return error
+
+
+
+def get_error_ellipse_rcip_improved(npan, nsub):
+    T, W, _ = sps.legendre(n).weights.T
+    IP, IPW = IPinit(T,  W)
+
+    aspect = 3
+
+    #Number of panels = 10
+
+
+    
+    s, _ = zinit_ellipse(T,  W, npan)
+    z, zp, zpp, nz, w, wzp, npoin= zinit_ellipse_true(T,W,npan,aspect)
+
+    #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+    Kcirc = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+    '''
+    So one interesting thing to note is that zloc_init and zinit do 2 different things. 
+    zinit should be considered the gold standard as this essentially defines
+    the order in which we label nodes when constructing all of our vectors
+    including our kernels. So in other words make sure that you keep this
+    consistent.
+    '''
+    R_sp = Rcomp_ellipse_improved(aspect,T,W,Pbc,PWbc,nsub,npan)
+
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+
+
+    # get true value of R
+    #R= get_R_true(npan, nsub, aspect)
+    #print(np.max(np.abs(R-R_true)))
+
+
+
+    I_coa = np.eye(npoin)
+
+    LHS = I_coa + (Kcirc@R)
+    #pot_boundary = np.loadtxt('bc_potential.np')
+    
+    test_charge = np.array([-3,3])
+    RHS = 2*get_bc_conditions([test_charge], z)
+
+    #target = np.array([1,0.2])
+    target_complex= 2.9 + complex(0,1)*0
+
+    #plt.figure(1)
+    #plt.scatter(z.real, z.imag)
+    #plt.scatter(test_charge[0], test_charge[1])
+    #plt.scatter(target_complex.real, target_complex.imag)
+
+    #density = gmres(LHS, RHS)[0]
+    density = np.linalg.solve(LHS, RHS)
+    #print(LHS, RHS)
+    density_hat = R @ density
+
+    #print("LHS:", np.mean(LHS))
+    #print("Kcirc:", np.mean(Kcirc))
+    #print("R:", np.mean(R))
+
+    z_list = np.empty((npoin,2))
+    z_list[:,0] = z.real
+    z_list[:,1] = z.imag
+
+    f_list = compute_f_true(s, target_complex, aspect)
+
+    awzp = w * np.abs(zpfunc_ellipse(s, aspect))
+
+    pot_at_target = np.sum(f_list*density_hat*awzp)
+
+    #print(pot_at_target)
+
+    npan_naive = 10
+    #out, true = get_naive_potential(npan_naive, test_charge, target_complex)
+
+    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
+    #print("RCIP Computation Error:", np.abs(pot_at_target - true))
+    #print(np.abs(pot_at_target - true))
+    return np.abs(pot_at_target - true)
+
+def Rcomp_ellipse_improved(aspect, T, W, Pbc, PWbc, nsub, npan):
+    R = None
+    #This I don't particularily believe. Nvm.
+    #It runs nsub+1 times.
+    for level in range(1,nsub+1):
+        z, zp, zpp, nz, w, wzp, npoin = zloc_init_ellipse_true(T, W, nsub, level, npan,aspect)
+        K = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
+        #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+        MAT = np.eye(96) + K
+        if level == 1:
+            R = np.linalg.inv(MAT[16:80,16:80])
+        MAT[16:80,16:80] = np.linalg.inv(R)
+        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
+    return R
 
 if __name__ == '__main__':
     #main_ellipse()
@@ -1347,9 +1522,9 @@ if __name__ == '__main__':
     for i in range(10, 40, 5):
         print(i)
         array.append((old_rcip_problem(npan, i)))
-        array_new.append((get_error_ellipse_rcip(npan, i)))
+        array_new.append((get_error_ellipse_rcip_improved(npan, i)))
         x.append((i))
-    plt.loglog(x, array, 'o',label='old rcip code', )
+    plt.loglog(x, array, 'o',label='old rcip code')
     plt.loglog(x, array_new,'o',label='new ellipse code')
     plt.legend()
     plt.title("Convergence of Problem w/No Singularity")

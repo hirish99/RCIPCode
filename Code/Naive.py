@@ -91,6 +91,7 @@ class sympy_old_kernel_teardrop:
         expr = numerator/denominator
 
         expr = expr.subs([(a, aspect)])
+        self.expr=expr
         f = sp.utilities.lambdify([t,t_p],expr,"numpy")
         self.kernel_lambda = f
 
