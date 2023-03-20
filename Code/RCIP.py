@@ -1342,7 +1342,7 @@ def old_rcip_problem(npan, nsub):
 
     #print(error)
 
-    return error
+    return np.abs(q)
 
 
 def old_kernel_double_ellipse(npan, nsub):
@@ -1545,7 +1545,8 @@ def get_error_teardrop_rcip_improved(npan, nsub):
     true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
 
     print(pot_at_target-true)
-    return np.abs(pot_at_target-true)/np.abs(true)
+    #return np.abs(pot_at_target-true)/np.abs(true)
+    return np.abs(pot_at_target)
 
 if __name__ == '__main__':
     #main_ellipse()
@@ -1556,10 +1557,10 @@ if __name__ == '__main__':
 
     npan = 10
 
-    for i in range(5, 40, 5):
+    for i in range(5, 40, 1):
         print(i)
-        array.append((old_rcip_problem(npan, i)))
-        array_new.append((get_error_teardrop_rcip_improved(npan, i)))
+        array.append(np.abs(old_rcip_problem(npan, i)-old_rcip_problem(npan, i-1)))
+        array_new.append(np.abs((get_error_teardrop_rcip_improved(npan, i))-(get_error_teardrop_rcip_improved(npan, i-1))))
         #array_new.append((get_error_teardrop_rcip(npan, i)))
         x.append((i))
     plt.loglog(x, array, 'o',label='old rcip code')
