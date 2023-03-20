@@ -260,33 +260,6 @@ class TestNaiveMethod(unittest.TestCase):
         #print("Potential At Target:", pot_at_target)
         #print("Error:", np.abs(pot_at_target-true))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-
-
-
-
         
 
     def test_R_comp_teardrop(self):
