@@ -1282,9 +1282,10 @@ def old_rcip_problem_new_kernel(npan, nsub):
     q = np.sum(rhohat*zeta)
     error = (np.abs(qref-q)/np.abs(qref))
     #print(error)
+    #return np.abs(q)
     return error
 
-def old_rcip_problem(npan, nsub):
+def old_rcip_problem(npan, nsub, random):
     n = 16
     T, W, _ = sps.legendre(n).weights.T
 
@@ -1341,8 +1342,18 @@ def old_rcip_problem(npan, nsub):
     error = (np.abs(qref-q)/np.abs(qref))
 
     #print(error)
+    #return error
+    #return np.abs(q)
+    target_complex= 0.01+ complex(0,1)*0
+    f_list = compute_f_true_teardrop(z, complex(0,1)*zp/np.abs(zp), target_complex)
 
-    return np.abs(q)
+
+    pot_at_target = np.sum(f_list*rhohat*np.abs(wzp))
+    
+    if random == False:
+        return error
+    else:
+        return pot_at_target
 
 
 def old_kernel_double_ellipse(npan, nsub):
@@ -1545,8 +1556,8 @@ def get_error_teardrop_rcip_improved(npan, nsub):
     true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
 
     print(pot_at_target-true)
-    #return np.abs(pot_at_target-true)/np.abs(true)
-    return np.abs(pot_at_target)
+    return np.abs(pot_at_target-true)/np.abs(true)
+    #return np.abs(pot_at_target)
 
 if __name__ == '__main__':
     #main_ellipse()
@@ -1558,15 +1569,16 @@ if __name__ == '__main__':
     npan = 10
 
     for i in range(5, 40, 1):
-        print(i)
-        array.append(np.abs(old_rcip_problem(npan, i)-old_rcip_problem(npan, i-1)))
-        array_new.append(np.abs((get_error_teardrop_rcip_improved(npan, i))-(get_error_teardrop_rcip_improved(npan, i-1))))
-        #array_new.append((get_error_teardrop_rcip(npan, i)))
+        #print(i)
+        array.append(np.abs(old_rcip_problem(npan, i, True)-old_rcip_problem(npan, i-1, True)))
+        array_new.append(np.abs(old_rcip_problem(npan, i, False)-old_rcip_problem(npan, i-1, False)))
+        #array_new.append(np.abs((old_rcip_problem_new_kernel(npan, i))))
+        #array_new.append((get_error_teardrop_rcip_improved(npan, i)))
         x.append((i))
-    plt.loglog(x, array, 'o',label='old rcip code')
-    plt.loglog(x, array_new,'o',label='new teardrop code')
+    plt.loglog(x, array, 'o',label='old rcip code different f')
+    plt.loglog(x, array_new,'o',label='old rcip code')
     plt.legend()
-    plt.title("Convergence of Problem w/ Singularity")
+    plt.title("Self-Convergence of Problem w/ Singularity")
     plt.xlabel("nsub (npan=10)")
     plt.ylabel("rel. error")
 

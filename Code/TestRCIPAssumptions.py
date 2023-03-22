@@ -10,8 +10,8 @@ class TestNaiveMethod(unittest.TestCase):
     #function on the parametrization as well as the 
     def f_param(self, param, z_in):
         #result = z_in.real #original paper expression
-        #result = param*0 + 1 #constant value? shouldn't there be no error?
-        result = compute_f_true(param, 0.1 + 0*complex(0,1),3)
+        result = param*0 + 1 #constant value? shouldn't there be no error?
+        #result = compute_f_true(param, 0.1 + 0*complex(0,1),3)
         return result
     
     def test_plot_convergence(self):
@@ -21,9 +21,10 @@ class TestNaiveMethod(unittest.TestCase):
 
         npan = 10
 
-        for i in range(5, 45, 1):
+        for i in range(5, 40, 1):
             print(i)
-            array.append(self.get_error_teardrop_rcip_improved_test(npan, i)-self.get_error_teardrop_rcip_improved_test(npan, i-1))
+            #array_new.append(self.get_error_teardrop_rcip_improved_test(npan, i)-self.get_error_teardrop_rcip_improved_test(npan, i-1))
+            #array.append(np.abs(old_rcip_problem(npan, i)))
             #array_new.append((get_error_teardrop_rcip_improved(npan, i)))
             #array_new.append((get_error_teardrop_rcip(npan, i)))
             x.append((i))
