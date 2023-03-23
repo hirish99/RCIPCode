@@ -7,6 +7,32 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_convergence_of_R(self):
+
+        theta = np.pi/2
+        T, W, _ = sps.legendre(n).weights.T
+        IP, IPW = IPinit(T,  W)
+        Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+        PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+        npan = 10
+
+        Rcomp_old_arr = []
+        Rcomp_new_arr = []
+        x = []
+
+        for i in range(10, 30, 1):
+            Rcomp_old_arr.append(np.linalg.norm(Rcomp_teardrop_improved(theta, T, W, Pbc, PWbc, i, npan)-Rcomp_teardrop_improved(theta, T, W, Pbc, PWbc, i-1, npan)))
+            Rcomp_new_arr.append(np.linalg.norm(Rcomp(theta, T, W, Pbc, PWbc, i, npan)-Rcomp(theta, T, W, Pbc, PWbc, i-1, npan)))
+            x.append(i)
+
+        plt.loglog(x, Rcomp_old_arr, 'o',label='old rcip code')
+        plt.loglog(x, Rcomp_new_arr, 'o',label='new rcip code')
+        plt.title("R convergence old kernel vs knew kernel")
+        plt.legend()
+        plt.show()
+
+
     #function on the parametrization as well as the 
     def f_param(self, param, z_in):
         #result = z_in.real #original paper expression
@@ -21,8 +47,7 @@ class TestNaiveMethod(unittest.TestCase):
 
         npan = 10
 
-        for i in range(5, 40, 1):
-            print(i)
+        for i in range(5, 30, 1):
             #array_new.append(self.get_error_teardrop_rcip_improved_test(npan, i)-self.get_error_teardrop_rcip_improved_test(npan, i-1))
             #array.append(np.abs(old_rcip_problem(npan, i)))
             #array_new.append((get_error_teardrop_rcip_improved(npan, i)))
@@ -148,6 +173,8 @@ class TestNaiveMethod(unittest.TestCase):
             nsub_list.append(nsub)
             error_list.append(np.linalg.norm(f_fine - P @ f_coarse))
 
+        
+        
         plt.title("Log Scaled Plot of Error vs NSUB")
         plt.xlabel("Number of Subdivisions")
         plt.ylabel("Error")
