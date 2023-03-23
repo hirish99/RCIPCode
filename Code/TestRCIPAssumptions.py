@@ -7,6 +7,25 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_convergence_of_density(self):
+        npan = 10
+
+        old_arr = []
+        new_arr = []
+        x = []
+
+        for i in range(10, 30, 1):
+            old_arr.append(np.linalg.norm(old_rcip_problem_density(npan, i)[0]-old_rcip_problem_density(npan, i-1)[0]))
+            new_arr.append(np.linalg.norm(teardrop_rcip_improved_density(npan, i)[0]-teardrop_rcip_improved_density(npan, i-1)[0]))
+            x.append(i)
+
+        plt.loglog(x, old_arr, 'o',label='old rcip code')
+        plt.loglog(x, new_arr, 'o',label='new rcip code')
+        plt.title("rho tilde old kernel vs knew kernel")
+        plt.legend()
+        plt.show()
+
+    
     def test_convergence_of_R(self):
 
         theta = np.pi/2
@@ -54,13 +73,13 @@ class TestNaiveMethod(unittest.TestCase):
             #array_new.append((get_error_teardrop_rcip(npan, i)))
             x.append((i))
         
-        plt.loglog(x, array, 'o',label='old rcip code')
+        #plt.loglog(x, array, 'o',label='old rcip code')
         #plt.loglog(x, array_new,'o',label='new teardrop code')
-        plt.legend()
-        plt.title("Self-Convergence of Problem w/ Singularity")
-        plt.xlabel("nsub (npan=10)")
-        plt.ylabel("rel. error")
-        plt.show()  
+        #plt.legend()
+        #plt.title("Self-Convergence of Problem w/ Singularity")
+        #plt.xlabel("nsub (npan=10)")
+        #plt.ylabel("rel. error")
+        #plt.show()  
 
 
     def get_error_teardrop_rcip_improved_test(self, npan, nsub):
