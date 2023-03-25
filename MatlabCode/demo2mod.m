@@ -24,7 +24,6 @@
   title(num2str(p));
   hold off
   
-  
   function error=ErrorCompOld(npan,nsub)
     lambda=0.999;  % parameter lambda
     %lambda=1;
