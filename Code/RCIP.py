@@ -1285,6 +1285,7 @@ def old_rcip_problem_new_kernel(npan, nsub):
     #return np.abs(q)
     return error
 
+
 def old_rcip_problem_density(npan, nsub):
     n = 16
     T, W, _ = sps.legendre(n).weights.T
@@ -1317,9 +1318,10 @@ def old_rcip_problem_density(npan, nsub):
     Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
     PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
-
-
     R_sp = Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+
+   
+
     R = np.eye(npoin)
     #Not the most efficient but quadratic in the order of quadrature
     l=0
@@ -1358,6 +1360,7 @@ def old_rcip_problem(npan, nsub, random=False):
     z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
 
     Kcirc = MAinit(z,zp,zpp,nz,w,wzp,npoin)
+    #KcircD = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
 
     starind = [i for i in range(npoin-32,npoin)]
     starind += [i for i in range(32)]
@@ -1564,6 +1567,10 @@ def teardrop_rcip_improved_density(npan, nsub):
     including our kernels. So in other words make sure that you keep this
     consistent.
     '''
+
+    '''
+    Everything after here is suspect in terms of convergence:
+    '''
     R_sp = Rcomp_teardrop_improved(theta,T,W,Pbc,PWbc,nsub,npan)
 
     R = np.eye(npoin)
@@ -1658,7 +1665,7 @@ def get_error_teardrop_rcip_improved(npan, nsub):
     LHS = I_coa + (Kcirc@R)
 
     test_charge = np.array([-0.25,0.4]) 
-    RHS = 2*get_bc_conditions([test_charge], z)
+    RHS = get_bc_conditions([test_charge], z)
 
     target_complex= 0.01+ complex(0,1)*0
 
@@ -1672,7 +1679,7 @@ def get_error_teardrop_rcip_improved(npan, nsub):
     z_list[:,0] = z.real
     z_list[:,1] = z.imag
     zp = zpfunc(s, theta)
-    f_list = compute_f_true_teardrop(z, complex(0,1)*zp/np.abs(zp), target_complex)
+    f_list = 2*compute_f_true_teardrop(z, complex(0,1)*zp/np.abs(zp), target_complex)
 
     awzp = w * np.abs(zpfunc(s, theta))
 
@@ -1693,12 +1700,15 @@ if __name__ == '__main__':
 
     npan = 10
 
+    #get_error_teardrop_rcip_improved(10, 4)
+
     for i in range(5, 40, 1):
         #print(i)
-        array.append(np.abs(old_rcip_problem(npan, i, True)-old_rcip_problem(npan, i-1, True)))
-        array_new.append(np.abs(old_rcip_problem(npan, i, False)-old_rcip_problem(npan, i-1, False)))
+        array.append(old_rcip_problem(npan,i,False))
+        #array.append(np.abs(old_rcip_problem(npan, i, True)-old_rcip_problem(npan, i-1, True)))
+        #array_new.append(np.abs(old_rcip_problem(npan, i, False)-old_rcip_problem(npan, i-1, False)))
         #array_new.append(np.abs((old_rcip_problem_new_kernel(npan, i))))
-        #array_new.append((get_error_teardrop_rcip_improved(npan, i)))
+        array_new.append((get_error_teardrop_rcip_improved(npan, i)))
         x.append((i))
     plt.loglog(x, array, 'o',label='old rcip code different f')
     plt.loglog(x, array_new,'o',label='old rcip code')
