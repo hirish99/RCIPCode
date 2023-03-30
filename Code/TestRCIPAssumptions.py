@@ -6,6 +6,23 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
+    def test_convergence_of_LHS(self):
+        npan = 10
+
+        old_arr = []
+        new_arr = []
+        x = []
+
+        for i in range(10, 30, 1):
+            old_arr.append(np.linalg.norm(old_rcip_problem_density(npan, i)[0]-old_rcip_problem_density(npan, i-1)[0])/np.linalg.norm(old_rcip_problem_density(npan, i)[0]))
+            new_arr.append(np.linalg.norm(teardrop_rcip_improved_LHS_RHS(npan, i)[0]-teardrop_rcip_improved_LHS_RHS(npan, i-1)[0])/np.linalg.norm(teardrop_rcip_improved_LHS_RHS(npan, i)[0]))
+            x.append(i)
+
+        plt.loglog(x, old_arr, 'o',label='old rcip code')
+        plt.loglog(x, new_arr, 'o',label='new rcip code')
+        plt.title("LHS old kernel vs new kernel")
+        plt.legend()
+        plt.show()
 
     def test_convergence_of_density(self):
         npan = 10
