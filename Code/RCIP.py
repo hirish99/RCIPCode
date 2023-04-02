@@ -1337,6 +1337,59 @@ def old_rcip_problem_KcircR(npan, nsub):
 
     return Kcirc@R
 
+def old_rcip_problem_LHS_RHS_conditioning(npan, nsub):
+    n = 16
+    T, W, _ = sps.legendre(n).weights.T
+
+    IP, IPW = IPinit(T,  W)
+
+    theta = np.pi/2
+    lamda = 0.999
+    evec = 1
+    qref = 1.1300163213105365
+
+    #Number of panels = 10
+
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+
+    z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+
+    Kcirc = MAinit(z,zp,zpp,nz,w,wzp,npoin)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+    R_sp = Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+
+   
+
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+    
+    I_coa = np.eye(npoin)
+    LHS = I_coa +lamda*(Kcirc@R)
+
+    RHS = 2*lamda*(nz).real
+    return np.linalg.cond(LHS)
+
+
 def old_rcip_problem_LHS_RHS(npan, nsub):
     n = 16
     T, W, _ = sps.legendre(n).weights.T
@@ -1698,6 +1751,74 @@ def teardrop_rcip_improved_KcircR(npan, nsub):
 
     return Kcirc@R
 
+def teardrop_rcip_improved_LHS_RHS_condition(npan, nsub):
+    T, W, _ = sps.legendre(n).weights.T
+    IP, IPW = IPinit(T,  W)
+
+    theta = np.pi/2
+
+    #Number of panels = 10
+
+
+    
+    s, _ = zinit_ellipse(T,  W, npan)
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+
+    z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+
+    #In the paper K absorbs a factor of 2, my MAinit_ellipse doesn't have that factor of 2
+    Kcirc = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+    '''
+    So one interesting thing to note is that zloc_init and zinit do 2 different things. 
+    zinit should be considered the gold standard as this essentially defines
+    the order in which we label nodes when constructing all of our vectors
+    including our kernels. So in other words make sure that you keep this
+    consistent.
+    '''
+
+    '''
+    Everything after here is suspect in terms of convergence:
+    '''
+    R_sp = Rcomp_teardrop_improved(theta,T,W,Pbc,PWbc,nsub,npan)
+
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+
+    #R_true = get_R_true_teardrop(npan,nsub,theta)
+    #print("\nDifference In  Norm - NSUB:", nsub, " ", np.linalg.norm(R-R_true))
+    #R = R_true
+    #Experimental
+
+    I_coa = np.eye(npoin)
+
+    LHS = I_coa + (Kcirc@R)
+
+    test_charge = np.array([-0.25,0.4]) 
+    RHS = 2*get_bc_conditions([test_charge], z)
+
+    return np.linalg.cond(LHS)
+
 def teardrop_rcip_improved_LHS_RHS(npan, nsub):
     T, W, _ = sps.legendre(n).weights.T
     IP, IPW = IPinit(T,  W)
@@ -1908,6 +2029,8 @@ def get_error_teardrop_rcip_improved(npan, nsub):
 
     #density = gmres(LHS, RHS)[0]
     density = np.linalg.solve(LHS, RHS)
+
+    assert np.allclose(np.dot(LHS, density), RHS)
     #print(np.mean(LHS @ density - RHS))
     #print(LHS, RHS)
     density_hat = R @ density

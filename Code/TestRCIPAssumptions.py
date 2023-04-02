@@ -7,6 +7,25 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_condition_number_of_LHS(self):
+        npan = 10
+
+        old_arr = []
+        new_arr = []
+        x = []
+
+        for i in range(10, 30, 1):
+            old_arr.append(old_rcip_problem_LHS_RHS_conditioning(npan, i))
+            new_arr.append(teardrop_rcip_improved_LHS_RHS_condition(npan, i))
+            x.append(i)
+
+        plt.loglog(x, old_arr, 'o',label='old rcip code conditioning')
+        plt.loglog(x, new_arr, 'o',label='new rcip code conditioning')
+        plt.title("LHS old kernel vs new kernel conditioning")
+        plt.legend()
+        plt.show()
+
+
     def test_convergence_of_KcircR_old_new(self):
         npan = 10
 
