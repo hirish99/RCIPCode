@@ -7,6 +7,21 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
+    def test_accuracy_RCIP_vs_Naive_ellipse(self):
+
+        test_charge = np.array([-4,4]) 
+        target_complex = 0.01 + complex(0,1)*0
+        npan = 10
+        nsub = 10
+        error = get_error_ellipse_rcip_improved(npan, nsub, test_charge, target_complex)
+        print(error)
+
+
+
+
+
+
+    '''
     def test_condition_number_of_LHS(self):
         npan = 10
 
@@ -165,13 +180,6 @@ class TestNaiveMethod(unittest.TestCase):
         Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
         PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
-        '''
-        So one interesting thing to note is that zloc_init and zinit do 2 different things. 
-        zinit should be considered the gold standard as this essentially defines
-        the order in which we label nodes when constructing all of our vectors
-        including our kernels. So in other words make sure that you keep this
-        consistent.
-        '''
         R_sp = Rcomp_teardrop_improved(theta,T,W,Pbc,PWbc,nsub,npan)
 
         R = np.eye(npoin)
@@ -254,6 +262,7 @@ class TestNaiveMethod(unittest.TestCase):
         plt.ylabel("Error")
         plt.loglog(nsub_list, error_list,'o' )
         plt.show()
+        '''
         
 
 if __name__ == '__main__':

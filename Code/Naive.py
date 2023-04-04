@@ -426,6 +426,8 @@ def get_naive_potential(npan, test_charge, target_complex):
     return out, true
 
 
+
+
 def get_error(npan, test_charge, target_complex):
     #Defining Number of Panels
     #npan = int(np.loadtxt('../InitialConditions/npan.np')[1])
