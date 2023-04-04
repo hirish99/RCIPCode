@@ -11,10 +11,24 @@ class TestNaiveMethod(unittest.TestCase):
 
         test_charge = np.array([-4,4]) 
         target_complex = 0.01 + complex(0,1)*0
+
         npan = 10
-        nsub = 10
-        error = get_error_ellipse_rcip_improved(npan, nsub, test_charge, target_complex)
-        print(error)
+
+        error_rcip = []
+        error_naive = []
+        x = []
+
+        for nsub in range(10, 30):
+            error_rcip.append(get_error_ellipse_rcip_improved(npan,nsub,test_charge,target_complex))
+            error_naive.append(get_error_ellipse_naive_improved(npan,nsub,test_charge,target_complex))
+            x.append(nsub)
+
+        plt.loglog(x, error_rcip, 'o',label='rcip code ellipse')
+        plt.loglog(x, error_naive, 'o',label='naive code ellipse')
+        plt.title("log error vs log nsub (npan = 10)")
+        plt.legend()
+        plt.show()
+
 
 
 

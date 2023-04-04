@@ -182,6 +182,16 @@ def zinit_ellipse(T,W,npan):
     
     return s, w
 
+def zinit_ellipse_modified(s, w, a):
+    #np is the number of points used for discretization in total
+    z = zfunc_ellipse(s, a)[0]
+    zp = zpfunc_ellipse(s, a)[0]
+    zpp = zppfunc_ellipse(s, a)[0]
+    nz = (-complex(0,1)*zp/np.abs(zp))
+    wzp = (w*zp) 
+    
+    return z,zp,zpp,nz,w,wzp,z.shape[0]
+
 def zinit_ellipse_true(T,W,npan,a):
     npoin = 16*npan #np is the number of points used for discretization in total
 
@@ -204,11 +214,12 @@ def zinit_ellipse_true(T,W,npan,a):
         #The weights are correspondingly scaled/2 since we are are transforming
         #from -1,1 to x,x+sinter
         w[start_in:end_in] = W*sdif
-        z = zfunc_ellipse(s, a)[0]
-        zp = zpfunc_ellipse(s, a)[0]
-        zpp = zppfunc_ellipse(s, a)[0]
-        nz = (-complex(0,1)*zp/np.abs(zp))
-        wzp = (w*zp) 
+
+    z = zfunc_ellipse(s, a)[0]
+    zp = zpfunc_ellipse(s, a)[0]
+    zpp = zppfunc_ellipse(s, a)[0]
+    nz = (-complex(0,1)*zp/np.abs(zp))
+    wzp = (w*zp) 
     
     return z,zp,zpp,nz,w,wzp,npoin
 
@@ -1534,7 +1545,35 @@ def old_kernel_double_ellipse(npan, nsub):
 
     return error
 
+def get_error_ellipse_naive_improved(npan, nsub, test_charge, target_complex):
+    T, W, _ = sps.legendre(n).weights.T
+    IP, IPW = IPinit(T,  W)
 
+    aspect = 3
+
+    #Number of panels = 10
+
+    s,w,_ = give_fine_mesh_parametrization_ellipse(nsub, npan)
+    
+    z, zp, zpp, nz, w, wzp, npoin = zinit_ellipse_modified(s,w,aspect)
+    
+    W_shape = np.diag(w)
+    #In the paper K absorbs a factor of 2, my MAinit_ellipse sn't have that factor of 2
+    DK = MAinitDL(z,zp,zpp,nz,w,wzp,npoin) 
+    I_coa = np.eye(npoin)
+
+    LHS = I_coa + DK @ W_shape
+    RHS = get_bc_conditions([test_charge], z)
+
+    #density = gmres(LHS, RHS)[0]
+    density = np.linalg.solve(LHS, RHS)
+
+    out = compute_double_layer_off_boundary(z, -nz, target_complex, npoin) @ W_shape @ density   
+    #print("Result:", out)
+    true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
+
+    print(np.abs(out-true))
+    return np.abs(out-true)/np.abs(true)
 
 def get_error_ellipse_rcip_improved(npan, nsub, test_charge, target_complex):
     T, W, _ = sps.legendre(n).weights.T
@@ -1614,7 +1653,7 @@ def get_error_ellipse_rcip_improved(npan, nsub, test_charge, target_complex):
 
     true = get_potential(np.array([target_complex.real,target_complex.imag]), [test_charge])
 
-    print(pot_at_target-true)
+
     return np.abs(pot_at_target-true)/np.abs(true)
 
     
