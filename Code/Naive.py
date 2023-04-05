@@ -333,6 +333,28 @@ def test_curve_weights(npan, aspect):
     #print(result.shape)
     return result.reshape(-1)
 
+def test_curve_speed_param(curve_nodes):
+    curve_deriv = curve_deriv_calc(D, curve_nodes)
+    #curve_deriv = fixed_curve_deriv(param, aspect)
+    curve_speed = (curve_deriv[0]**2 + curve_deriv[1]**2)**0.5
+    return curve_speed
+
+def test_curve_weights_param(z):
+    curve_nodes_x = z.real.reshape(-1, 16)
+    curve_nodes_y = z.imag.reshape(-1, 16)
+    curve_nodes = np.empty((2, curve_nodes_x.shape[0], 16))
+    curve_nodes[0,:,:] = curve_nodes_x
+    curve_nodes[1,:,:] = curve_nodes_y
+
+
+    #print(lege_weights.shape)
+    speed = test_curve_speed_param(curve_nodes)
+    #print(speed.shape)
+    result = lege_weights * speed
+    #print(result.shape)
+    return result.reshape(-1)
+
+
 @pytest.mark.skip(reason="not a test")
 def test_curve_weights_teardrop(npan, theta):
     #print(lege_weights.shape)

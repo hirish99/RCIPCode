@@ -6,7 +6,7 @@ from scipy.sparse.linalg import gmres
 import scipy.special as sps
 import warnings
 
-from Naive import get_bc_conditions, teardrop
+from Naive import get_bc_conditions, teardrop, test_curve_weights_param
 from Naive import sympy_kernel, test_curve_weights, sympy_kernel_teardrop, zpfunc
 from Naive import compute_double_layer_kernel_test, ellipse, make_panels, ellipse_normal, teardrop_normal,test_curve_weights_teardrop
 from Naive import compute_double_layer_off_boundary, get_naive_potential, get_potential, get_error_teardrop_naive
@@ -1556,14 +1556,15 @@ def get_error_ellipse_naive_improved(npan, nsub, test_charge, target_complex):
     s,w,_ = give_fine_mesh_parametrization_ellipse(nsub, npan)
     
     z, zp, zpp, nz, w, wzp, npoin = zinit_ellipse_modified(s,w,aspect)
-    
-    W_shape = np.diag(w)
+
+    W_shape = np.diag(test_curve_weights_param(z))
     #In the paper K absorbs a factor of 2, my MAinit_ellipse sn't have that factor of 2
     DK = MAinitDL(z,zp,zpp,nz,w,wzp,npoin) 
+    #D_K = get_K_fine(nsub, npan, 3)
     I_coa = np.eye(npoin)
 
-    LHS = I_coa + DK @ W_shape
-    RHS = get_bc_conditions([test_charge], z)
+    LHS = I_coa + DK
+    RHS = 2*get_bc_conditions([test_charge], z)
 
     #density = gmres(LHS, RHS)[0]
     density = np.linalg.solve(LHS, RHS)

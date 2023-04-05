@@ -1,5 +1,5 @@
 from RCIP import *
-
+from Naive import get_error
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
@@ -10,18 +10,23 @@ class TestNaiveMethod(unittest.TestCase):
     def test_accuracy_RCIP_vs_Naive_ellipse(self):
 
         test_charge = np.array([-4,4]) 
-        target_complex = 0.01 + complex(0,1)*0
+        target_complex = 2.88 + complex(0,1)*0
 
         npan = 10
+        nsub = 4
 
         error_rcip = []
         error_naive = []
         x = []
 
+        get_error(npan, test_charge, target_complex)
+
+        get_error_ellipse_naive_improved(npan,nsub,test_charge,target_complex)
+
         for nsub in range(10, 30):
             error_rcip.append(get_error_ellipse_rcip_improved(npan,nsub,test_charge,target_complex))
             error_naive.append(get_error_ellipse_naive_improved(npan,nsub,test_charge,target_complex))
-            x.append(nsub)
+            x.append(nsub) 
 
         plt.loglog(x, error_rcip, 'o',label='rcip code ellipse')
         plt.loglog(x, error_naive, 'o',label='naive code ellipse')
