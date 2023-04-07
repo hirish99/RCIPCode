@@ -608,9 +608,11 @@ def get_K_star_circ_fine_teardrop(nsub, npan, theta):
 
 def get_K_star_circ_fine(nsub, npan, aspect):
     param, weights, kcirc = give_fine_mesh_parametrization_ellipse(nsub, npan)
+
+    z, zp, zpp, nz, w, wzp, npoin = zinit_ellipse_modified(param, weights, aspect)
     
-    Kstar = MAinit_ellipse(param, weights, aspect)
-    K = MAinit_ellipse(param, weights, aspect)
+    Kstar = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
+    K = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
     kcirc = set(kcirc)
 
     for i in range(K.shape[0]):

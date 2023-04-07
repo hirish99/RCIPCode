@@ -7,10 +7,46 @@ import unittest
 
 class TestNaiveMethod(unittest.TestCase):
 
-    def test_accuracy_RCIP_vs_Naive_ellipse(self):
+    def test_accuracy_of_recursion(self):
+
+        aspect = 3
+        npan = 10
+        nsub = 20
+        R_true = get_R_true(npan, nsub, aspect)
+
+
+        npoin = npan * 16
+        starind = [i for i in range(npoin-32,npoin)]
+        starind += [i for i in range(32)]
+
+        T, W, _ = sps.legendre(n).weights.T
+        IP, IPW = IPinit(T,  W)
+        Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+        PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+        R_sp = Rcomp_ellipse_improved(aspect,T,W,Pbc,PWbc,nsub,npan)
+
+        R = np.eye(npoin)
+        #Not the most efficient but quadratic in the order of quadrature
+        l=0
+        for i in starind:
+            m=0
+            for j in starind:
+                R[i,j] = R_sp[l,m]
+                m+=1
+            l+=1
+
+        print(np.linalg.norm(R-R_true, 2))
+
+
+
+
+    
+
+    """ def test_accuracy_RCIP_vs_Naive_ellipse(self):
 
         test_charge = np.array([-4,4]) 
-        target_complex = 2.88 + complex(0,1)*0
+        target_complex = 2 + complex(0,1)*0
 
         npan = 10
         nsub = 4
@@ -32,7 +68,7 @@ class TestNaiveMethod(unittest.TestCase):
         plt.loglog(x, error_naive, 'o',label='naive code ellipse')
         plt.title("log error vs log nsub (npan = 10)")
         plt.legend()
-        plt.show()
+        plt.show() """
 
 
 
