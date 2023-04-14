@@ -6,7 +6,17 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 import unittest
 
 class TestNaiveMethod(unittest.TestCase):
+     
 
+    def test_get_fine_density_ellipse_rcip_improved(self):
+        test_charge = np.array([-4,4]) 
+        target_complex = 2 + complex(0,1)*0
+
+        npan = 10
+        nsub = 4
+        get_fine_density_ellipse_rcip_improved()
+
+    """
     def test_accuracy_of_recursion(self):
 
         aspect = 3
@@ -43,7 +53,7 @@ class TestNaiveMethod(unittest.TestCase):
 
     
 
-    """ def test_accuracy_RCIP_vs_Naive_ellipse(self):
+    def test_accuracy_RCIP_vs_Naive_ellipse(self):
 
         test_charge = np.array([-4,4]) 
         target_complex = 2 + complex(0,1)*0
