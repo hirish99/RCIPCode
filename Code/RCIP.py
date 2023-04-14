@@ -1415,6 +1415,65 @@ def old_rcip_problem_density(npan, nsub):
     rhohat = R @ rhotilde
     return rhotilde, rhohat
 
+def old_rcip_problem_reconstruct_fine_density(npan, nsub, random=False):
+    n = 16
+    T, W, _ = sps.legendre(n).weights.T
+
+    IP, IPW = IPinit(T,  W)
+
+    theta = np.pi/2
+    lamda = 0.999
+    evec = 1
+    qref = 1.1300163213105365
+
+    #Number of panels = 10
+
+    sinter = np.linspace(0, 1, npan+1)
+    sinterdiff = np.ones(npan)/npan
+
+    z, zp, zpp, nz, w, wzp, npoin = zinit(theta, sinter, sinterdiff, T, W, npan)
+
+    Kcirc = MAinit(z,zp,zpp,nz,w,wzp,npoin)
+    #KcircD = MAinitDL(z,zp,zpp,nz,w,wzp,npoin)
+
+    starind = [i for i in range(npoin-32,npoin)]
+    starind += [i for i in range(32)]
+    bmask = np.zeros((Kcirc.shape[0],Kcirc.shape[1]),dtype='bool')
+
+    for i in starind:
+        for j in starind:
+            bmask[i,j]=1
+    Kcirc[bmask] = 0
+
+    Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
+    PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
+
+
+
+    R_sp = Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+    R = np.eye(npoin)
+    #Not the most efficient but quadratic in the order of quadrature
+    l=0
+    for i in starind:
+        m=0
+        for j in starind:
+            R[i,j] = R_sp[l,m]
+            m+=1
+        l+=1
+    
+    I_coa = np.eye(npoin)
+    LHS = I_coa +lamda*(Kcirc@R)
+
+    RHS = 2*lamda*(nz).real
+    #rhotilde = gmres(LHS, RHS)[0]
+    rhotilde = np.linalg.solve(LHS, RHS)
+
+    rhot = rhotilde[starind]
+
+    print(rhot)
+
+    
+
 def old_rcip_problem(npan, nsub, random=False):
     n = 16
     T, W, _ = sps.legendre(n).weights.T

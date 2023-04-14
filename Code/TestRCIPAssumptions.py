@@ -13,8 +13,8 @@ class TestNaiveMethod(unittest.TestCase):
         target_complex = 2 + complex(0,1)*0
 
         npan = 10
-        nsub = 4
-        get_fine_density_ellipse_rcip_improved()
+        nsub = 1
+        old_rcip_problem_reconstruct_fine_density(npan, nsub)
 
     """
     def test_accuracy_of_recursion(self):
