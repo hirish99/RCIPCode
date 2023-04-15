@@ -1470,6 +1470,12 @@ def old_rcip_problem_reconstruct_fine_density(npan, nsub, random=False):
 
     rhot = rhotilde[starind]
 
+
+    import scipy.io
+    LHS_MAT = scipy.io.loadmat('./LHS.mat')
+    RHS_MAT = scipy.io.loadmat('./RHS.mat')
+    RhoTilde = scipy.io.loadmat('./RhoTilde.mat')
+
     print(rhot)
 
     
