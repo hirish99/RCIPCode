@@ -1116,6 +1116,23 @@ def Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
     return R
 
+
+def Rcomp_old_store(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
+    Rstor = np.empty((64,64,nsub))
+    Kstor = np.empty((96,96,nsub))
+    for level in range(1, nsub+1):
+        z,zp,zpp,nz,w,wzp = zloc_init_old(theta,T,W,nsub,level,npan)
+        K = MAinit(z,zp,zpp,nz,w,wzp,96)
+        Kstor[:,:,level-1] = K
+        MAT = np.eye(96) + lamda*K
+        if level == 1:
+            R = np.linalg.inv(MAT[16:80,16:80])
+        MAT[16:80,16:80] = np.linalg.inv(R)
+        R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
+        Rstor[:,:,level-1] = K
+    return R, Rstor, Kstor
+
+
 def MAinit_old(z,zp,zpp,nz,w,wzp,npoin):
     import warnings
     warnings.filterwarnings("ignore", message="divide by zero encountered in divide")
@@ -1450,7 +1467,7 @@ def old_rcip_problem_reconstruct_fine_density(npan, nsub, random=False):
 
 
 
-    R_sp = Rcomp_old(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
+    R_sp,Rstor,Kstor = Rcomp_old_store(theta,lamda,T,W,Pbc,PWbc,nsub,npan)
     R = np.eye(npoin)
     #Not the most efficient but quadratic in the order of quadrature
     l=0
@@ -1470,13 +1487,35 @@ def old_rcip_problem_reconstruct_fine_density(npan, nsub, random=False):
 
     rhot = rhotilde[starind]
 
-
-    import scipy.io
-    LHS_MAT = scipy.io.loadmat('./LHS.mat')
-    RHS_MAT = scipy.io.loadmat('./RHS.mat')
-    RhoTilde = scipy.io.loadmat('./RhoTilde.mat')
-
     print(rhot)
+
+    pts2 = 16*(2+nsub)
+    rhofinloc = np.zeros((2*pts2))
+
+    for level in range(nsub-1, -1, -1):
+        Kcirc_r = Kstor[:,:,level]
+        Kcirc_r[bmask] = 0
+
+        MAT = np.eye(96) + Kcirc_r
+
+        PaddedRinv = np.zeros((96, 96))
+        PaddedRinv[16:-16,16:-16] = np.linalg.inv(Rstor[:,:,level])
+        S = np.linalg.inv(PaddedRinv + np.eye(96) + Kstor[:,:,level])
+        tmp = Pbc @ rhot
+        rhot = tmp - Kcirc_r@S@rhot
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     
 
