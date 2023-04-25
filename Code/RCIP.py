@@ -1129,7 +1129,7 @@ def Rcomp_old_store(theta,lamda,T,W,Pbc,PWbc,nsub,npan):
             R = np.linalg.inv(MAT[16:80,16:80])
         MAT[16:80,16:80] = np.linalg.inv(R)
         R = PWbc.T @ np.linalg.inv(MAT) @ Pbc
-        Rstor[:,:,level-1] = K
+        Rstor[:,:,level-1] = R
     return R, Rstor, Kstor
 
 
@@ -1462,6 +1462,14 @@ def old_rcip_problem_reconstruct_fine_density(npan, nsub, random=False):
             bmask[i,j]=1
     Kcirc[bmask] = 0
 
+
+    starind1 = [i for i in range(16, 96)]
+    bmask1 = np.zeros((96,96),dtype='bool')
+
+    for i in starind1:
+        for j in starind1:
+            bmask1[i,j]=1
+
     Pbc = block_diag(np.eye(16),IP,IP,np.eye(16))
     PWbc = block_diag(np.eye(16),IPW,IPW,np.eye(16))
 
@@ -1487,6 +1495,9 @@ def old_rcip_problem_reconstruct_fine_density(npan, nsub, random=False):
 
     rhot = rhotilde[starind]
 
+    circL = [i for i in range(16)]+[80+i for i in range(16)]
+    starL = [16+i for i in range(64)]
+
     print(rhot)
 
     pts2 = 16*(2+nsub)
@@ -1494,7 +1505,7 @@ def old_rcip_problem_reconstruct_fine_density(npan, nsub, random=False):
 
     for level in range(nsub-1, -1, -1):
         Kcirc_r = Kstor[:,:,level]
-        Kcirc_r[bmask] = 0
+        Kcirc_r[bmask1] = 0
 
         MAT = np.eye(96) + Kcirc_r
 
@@ -1502,7 +1513,28 @@ def old_rcip_problem_reconstruct_fine_density(npan, nsub, random=False):
         PaddedRinv[16:-16,16:-16] = np.linalg.inv(Rstor[:,:,level])
         S = np.linalg.inv(PaddedRinv + np.eye(96) + Kstor[:,:,level])
         tmp = Pbc @ rhot
-        rhot = tmp - Kcirc_r@S@rhot
+        rhot = tmp - Kcirc_r@S@tmp
+
+        myIndl1 = [pts2-(level+3)*16 + i for i in range(16)]
+        myIndl2 = [pts2+(level+2)*16 + i for i in range(16)]
+
+        myIndl = myIndl1+myIndl2
+
+        rhofinloc[myIndl] = rhot[circL]
+        rhot=rhot[starL]
+
+    rhofinloc[pts2-32:pts2+32] = Rstor[:,:,0] * rhot
+
+
+
+
+
+
+
+
+
+
+
 
 
 
