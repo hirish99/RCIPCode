@@ -37,10 +37,7 @@ function submat = kern(radius, order, srcinfo, targinfo, varargin)
     
     
     
-    src = srcinfo.r;
-    targ = targinfo.r;
-    
-    submat = dirac2d.green(radius, order, src, targ, varargin);
+    submat = dirac2d.green(radius, order, srcinfo, targinfo, varargin);
     
     end
     
