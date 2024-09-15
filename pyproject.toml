@@ -1,0 +1,7 @@
+[project]
+name = "rcip"
+description = "Implement RCIP"
+version = "0.1.0"
+authors = [
+    { name = "Niels Zeilemaker", email = "nielszeilemaker@godatadriven.com" }
+    ]
